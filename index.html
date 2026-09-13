@@ -1,5 +1,33 @@
 <!DOCTYPE html>
 <html>
-<head><title>LovelyAnimals Pi App</title></head>
-<body><h1>Welcome to LovelyAnimals</h1></body>
+<head>
+  <title>Spa Khải Hoàn</title>
+  <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+  <style>
+    body {text-align:center; padding:50px; font-family:Arial; background:#E8F5E9}
+    h1 {color:#2E7D32}
+    button {padding:15px 30px; font-size:18px; background:#2E7D32; color:white; border:none; border-radius:10px; cursor:pointer}
+  </style>
+</head>
+<body>
+  <h1>🌿 Spa Khải Hoàn 🌿</h1>
+  <p>Chăm sóc sức khỏe - Chữa lành</p>
+  <button onclick="pay()">Test Thanh toán 0.01 Pi</button>
+
+  <script>
+    Pi.init({ version: "2.0", sandbox: true })
+    function pay() {
+      Pi.createPayment({
+        amount: 0.01,
+        memo: "Test Spa Khai Hoan",
+        metadata: {}
+      }, {
+        onReadyForServerApproval: (paymentId) => {},
+        onReadyForServerCompletion: (paymentId, txid) => { alert("Thanh toán thành công! Tx: " + txid) },
+        onCancel: (paymentId) => { alert("Đã hủy") },
+        onError: (error) => { alert("Lỗi: " + error) }
+      })
+    }
+  </script>
+</body>
 </html>
