@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h3>Spa Khai Hoan - Test A2U 5 wallets</h3>
+API Key Testnet: <input id="apikey" style="width:90%" placeholder="Dán API Key Testnet vào đây"><br><br>
+Username nhận Pi: <input id="username" placeholder="vd: friend1"><br><br>
+<button onclick="pay()">Tạo 1 giao dịch A2U</button>
+<pre id="log"></pre>
+
+<script>
+async function pay(){
+  const key = document.getElementById('apikey').value.trim();
+  const user = document.getElementById('username').value.trim();
+  if(!key || !user){ alert("Chưa nhập API Key hoặc username"); return; }
+  
+  document.getElementById('log').innerText = "Đang tạo payment cho " + user + "...";
+  
+  const res = await fetch('https://api.testnet.minepi.com/v2/payments', {
+    method:'POST',
+    headers:{'Authorization':'Key ' + key,'Content-Type':'application/json'},
+    body: JSON.stringify({
+      amount: 0.5,
+      memo: "A2U reward from Spa Khai Hoan",
+      metadata: {purpose: "test A2U"},
+      uid: user
+    })
+  });
+  const data = await res.json();
+  document.getElementById('log').innerText = JSON.stringify(data, null, 2);
+  alert("Xong 1 người! Đổi username khác làm tiếp cho đủ 5 người nha bro");
+}
+</script>
+</body>
+</html>
