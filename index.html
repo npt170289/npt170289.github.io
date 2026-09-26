@@ -57,8 +57,8 @@ document.getElementById('btn').onclick = async ()=>{
       metadata: {service:"spa"}
     },{
       onReadyForServerApproval: async (id)=>{log('PaymentId: '+id); await fetch("https://gardenstation303.vercel.app/api/approve",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentId:id})})},
-onReadyForServerCompletion: async (id,txid)=>{log('TXID: '+txid); await fetch("https://gardenstation303.vercel.app/api/complete",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentId:id,txid:txid})})},
-      onCancel: (id)=>log('Đã hủy'),
+onReadyForServerApproval: async (id)=>{log('PaymentId: '+id+' -> Approve...'); await fetch("https://gardenstation303.vercel.app/api/approve",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentId:id})})},
+      onReadyForServerCompletion: async (id,txid)=>{log('TXID: '+txid+' -> Complete...'); await fetch("https://gardenstation303.vercel.app/api/complete",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentId:id,txid:txid})})},
       onError: (e)=>log('Lỗi: '+e.message)
     });
   }catch(e){log('Lỗi: '+e.message)}
