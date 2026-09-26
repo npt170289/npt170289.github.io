@@ -56,8 +56,8 @@ document.getElementById('btn').onclick = async ()=>{
       memo: "Thanh toan Spa Khai Hoan",
       metadata: {service:"spa"}
     },{
-      onReadyForServerApproval: (id)=>{log('PaymentId: '+id); log('Cần backend duyệt - liên hệ dev để gắn API');},
-      onReadyForServerCompletion: (id,txid)=>{log('TXID: '+txid); log('✅ Thành công!');},
+      onReadyForServerApproval: async (id)=>{log('PaymentId: '+id); await fetch("https://gardenstation303.vercel.app/api/approve",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentId:id})})},
+onReadyForServerCompletion: async (id,txid)=>{log('TXID: '+txid); await fetch("https://gardenstation303.vercel.app/api/complete",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentId:id,txid:txid})})},
       onCancel: (id)=>log('Đã hủy'),
       onError: (e)=>log('Lỗi: '+e.message)
     });
