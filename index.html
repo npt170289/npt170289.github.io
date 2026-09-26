@@ -58,7 +58,7 @@ document.getElementById('btn').onclick = async ()=>{
     },{
       onReadyForServerApproval: async (id)=>{
         log('PaymentId: '+id+' -> Approve...');
-        const PI_API_KEY = "PASTE_YOUR_SPA_KHAI_HOAN_TESTNET_API_KEY_HERE";
+        const PI_API_KEY = "ixjuerofowwubk5wpmnsjoknyy68ufjp14ud2xwpuk69uf9rzayok6yk8v2hc1pt";
         const r = await fetch(`https://api.testnet.minepi.com/v2/payments/${id}/approve`, {
           method:"POST",
           headers:{"X-API-Key": PI_API_KEY}
