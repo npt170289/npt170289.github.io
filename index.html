@@ -43,8 +43,7 @@ button{background:#7c3aed;color:white;border:none;padding:16px 30px;border-radiu
 </div>
 <script>
 const log = (m)=>{document.getElementById('log').innerHTML+='<br>• '+m}
-window.addEventListener('load', ()=>{
-  
+window.addEventListener('load', ()=>{ 
  Pi.init({version:"2.0", sandbox: true});// Mainnet không có sandbox:true
   log('✅ Pi SDK Mainnet sẵn sàng');
 });
