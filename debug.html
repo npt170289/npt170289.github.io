@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Debug Pi Pay - Eruda</title>
+<script src="https://cdn.jsdelivr.net/npm/eruda"></script><script>eruda.init();</script>
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+</head><body style="font-family:monospace;padding:16px;background:#111;color:#0f0">
+<h3>DEBUG PI - Treo 60s</h3>
+<button id="b" style="padding:12px 20px;font-size:16px">Pay Debug 1 Pi</button>
+<div id="log" style="margin-top:12px;white-space:pre-wrap;word-break:break-all;border:1px solid #333;padding:10px;min-height:200px"></div>
+<script>
+const BACKEND="https://gardenstation303.vercel.app";
+const logEl=document.getElementById('log');
+function log(m){ const t=new Date().toLocaleTimeString(); logEl.textContent+="\n"+t+" "+m; console.log(m); }
+let inc=null;
+function onInc(p){ inc=p; log("KET CU: "+p.identifier+" txid="+(p.transaction?.txid||"null")); }
+window.addEventListener('load',()=>{ Pi.init({version:"2.0", sandbox:true}); log("Pi.init sandbox:true OK"); });
+document.getElementById('b').onclick=async()=>{
+  log("--- START ---");
+  try{
+    const auth=await Pi.authenticate(['username','payments'], onInc);
+    log("Auth OK @"+auth.user.username+" uid="+auth.user.uid);
+    if(inc){ log("DANG KET! Can clear truoc: "+inc.identifier); if(inc.transaction?.txid){ log("Co txid -> goi complete"); await fetch(BACKEND+"/api/complete",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentId:inc.identifier, txid:inc.transaction.txid})}).then(r=>r.text()).then(t=>log("Clear complete: "+t.slice(0,400))); } else { log("Chua co txid -> approve"); await fetch(BACKEND+"/api/approve",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentId:inc.identifier})}).then(r=>r.text()).then(t=>log("Clear approve: "+t.slice(0,400))); } inc=null; log("Da clear xong, bam Pay lai!"); return; }
+    log("Tao payment 1 Pi...");
+    await Pi.createPayment({amount:1, memo:"Debug 60s fix", metadata:{debug:true}},{
+      onReadyForServerApproval: async (pid)=>{
+        log("onReadyForServerApproval pid="+pid);
+        try{
+          log("Goi backend "+BACKEND+"/api/approve");
+          const r=await fetch(BACKEND+"/api/approve",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentId:pid})});
+          const txt=await r.text(); log("Approve HTTP "+r.status+" body: "+txt.slice(0,800));
+          if(!r.ok) throw new Error("Approve fail "+r.status+" "+txt.slice(0,300));
+          log("Approve OK!");
+        }catch(e){ log("Approve EXCEPTION: "+e.message); throw e; }
+      },
+      onReadyForServerCompletion: async (pid, txid)=>{
+        log("onReadyForServerCompletion pid="+pid+" txid="+txid.slice(0,20));
+        const r=await fetch(BACKEND+"/api/complete",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentId:pid, txid})});
+        const txt=await r.text(); log("Complete HTTP "+r.status+" body: "+txt.slice(0,800));
+        log("🎉 XONG!");
+      },
+      onCancel: (pid)=>{ log("Cancel "+pid); },
+      onError: (err, pay)=>{ log("onError: "+err.message+" "+JSON.stringify(err)); }
+    });
+  }catch(e){ log("LOI CHUNG: "+e.message+" "+e.stack); }
+};
+</script></body></html>
