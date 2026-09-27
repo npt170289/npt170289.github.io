@@ -3,70 +3,119 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spa Khai Hoan - Pi Testnet</title>
+<title>Spa Khai Hoan - Pi</title>
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <style>
-body{font-family:Arial,sans-serif;background:#f5f5f5;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0}
-.card{background:#fff;padding:24px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.1);text-align:center;max-width:360px;width:90%}
-button{background:#6a5af9;color:#fff;border:0;padding:12px 20px;border-radius:10px;font-size:16px;width:100%;margin-top:12px;cursor:pointer}
-button:disabled{opacity:.6}
-#log{margin-top:16px;font-size:12px;text-align:left;background:#111;color:#0f0;padding:10px;border-radius:8px;min-height:80px;word-break:break-all;white-space:pre-wrap}
+body{font-family:Arial,sans-serif;background:#f0f0f0;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0}
+.card{background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.1);width:90%;max-width:340px;text-align:center}
+button{background:#7c3aed;color:#fff;border:0;padding:12px;border-radius:8px;width:100%;font-size:16px;cursor:pointer;margin-top:10px}
+#log{margin-top:12px;background:#111;color:#0f0;padding:8px;border-radius:6px;font-size:11px;text-align:left;min-height:100px;white-space:pre-wrap;word-break:break-all;overflow:auto}
 </style>
 </head>
 <body>
 <div class="card">
-<h1>Spa Khai Hoan</h1>
+<h2>Spa Khai Hoan</h2>
 <p>Pay with Pi - Testnet</p>
 <button id="btn">Pay 1 Pi</button>
-<div id="log">Ready...</div>
+<button id="clearBtn" style="background:#666;font-size:12px;padding:8px;margin-top:6px">Clear stuck payment</button>
+<div id="log">Ready...
+</div>
 </div>
 <script>
-const $log=document.getElementById('log');
-const log=(m)=>{ $log.textContent+='\n'+m; $log.scrollTop=$log.scrollHeight; };
+const logEl=document.getElementById('log');
+function log(m){ logEl.textContent+='\n'+m; logEl.scrollTop=logEl.scrollHeight; console.log(m); }
+
+let incompletePayment = null;
+
+function onIncompletePaymentFound(payment){
+  log('STUCK FOUND: '+payment.identifier+' amount:'+payment.amount+' txid:'+payment.transaction?.txid);
+  incompletePayment = payment;
+  log('Bam Clear stuck payment de xu ly');
+  return;
+}
+
 window.addEventListener('load',()=>{
-  try{ Pi.init({version:"2.0", sandbox:true}); log('Pi SDK TESTNET Ready'); }
-  catch(e){ log('Pi init error: '+e.message); }
+  try{
+    Pi.init({version:"2.0", sandbox:true});
+    log('Pi SDK TESTNET Ready - vFINAL');
+  }catch(e){ log('Init error: '+e.message); }
 });
+
+document.getElementById('clearBtn').onclick=async()=>{
+  if(!incompletePayment){ log('Khong co payment bi ket'); return; }
+  try{
+    log('Dang xu ly stuck '+incompletePayment.identifier+'...');
+    if(incompletePayment.transaction && incompletePayment.transaction.txid){
+      log('Co txid, dang complete... '+incompletePayment.transaction.txid);
+      const r=await fetch("https://gardenstation303.vercel.app/api/complete",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({paymentId:incompletePayment.identifier, txid:incompletePayment.transaction.txid})
+      });
+      const j=await r.json();
+      log('Clear Complete: '+(j.success?'OK - thu lai di':'FAIL '+JSON.stringify(j).slice(0,150)));
+    }else{
+      log('Chua co txid, dang approve...');
+      const r=await fetch("https://gardenstation303.vercel.app/api/approve",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({paymentId:incompletePayment.identifier})
+      });
+      const j=await r.json();
+      log('Clear Approve: '+(j.success?'OK - hay bam Pay lai':'FAIL '+JSON.stringify(j).slice(0,150)));
+    }
+    incompletePayment=null;
+  }catch(e){ log('Clear error: '+e.message); }
+};
+
 document.getElementById('btn').onclick=async()=>{
   const btn=document.getElementById('btn');
   btn.disabled=true;
+  btn.textContent='Dang xu ly...';
   try{
-    log('Authenticating...');
-    const auth=await Pi.authenticate(['username','payments'], (p)=>{ log('Incomplete payment: '+p.identifier); });
-    log('Hello @'+auth.user.username);
-    log('Creating payment...');
+    log('--- Pay start ---');
+    log('Auth...');
+    const auth=await Pi.authenticate(['username','payments'], onIncompletePaymentFound);
+    log('Auth OK: @'+auth.user.username);
+    
+    log('Tao payment 1 Pi...');
     await Pi.createPayment({
       amount:1,
-      memo:"Spa Khai Hoan Test A2U",
-      metadata:{service:"spa-test"}
+      memo:"Spa Khai Hoan A2U test",
+      metadata:{service:"spa-test-5vi"}
     },{
       onReadyForServerApproval: async(id)=>{
-        log('PaymentId: '+id+' -> Approving...');
-        const r=await fetch("https://gardenstation303.vercel.app/api/approve",{
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({paymentId:id})
-        });
-        const j=await r.json();
-        log('Approve: '+(j.success?'OK':'FAIL '+JSON.stringify(j).slice(0,200)));
-        if(!j.success) throw new Error('Approve failed');
+        log('PaymentId: '+id+' -> Approve...');
+        try{
+          const r=await fetch("https://gardenstation303.vercel.app/api/approve",{
+            method:"POST",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({paymentId:id})
+          });
+          const j=await r.json();
+          log('Approve: '+(j.success?'OK':JSON.stringify(j).slice(0,200)));
+          if(!j.success) throw new Error(JSON.stringify(j));
+        }catch(e){ log('Approve loi: '+e.message); throw e; }
       },
       onReadyForServerCompletion: async(id,txid)=>{
-        log('TXID: '+txid+' -> Completing...');
-        const r=await fetch("https://gardenstation303.vercel.app/api/complete",{
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({paymentId:id, txid:txid})
-        });
-        const j=await r.json();
-        log('Complete: '+(j.success?'DONE 1 TK!':'FAIL '+JSON.stringify(j).slice(0,200)));
+        log('TXID: '+txid.slice(0,12)+'... -> Complete...');
+        try{
+          const r=await fetch("https://gardenstation303.vercel.app/api/complete",{
+            method:"POST",headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({paymentId:id, txid:txid})
+          });
+          const j=await r.json();
+          log('Complete: '+(j.success?'XONG 1 TK! LUM!':JSON.stringify(j).slice(0,200)));
+          if(j.success){ btn.textContent='XONG 1 TK!'; btn.style.background='#16a34a'; }
+        }catch(e){ log('Complete loi: '+e.message); }
       },
-      onCancel:(id)=>{ log('Cancelled: '+id); btn.disabled=false; },
-      onError:(e)=>{ log('Error: '+e.message); btn.disabled=false; }
+      onCancel:(id)=>{ log('Da huy: '+id); btn.disabled=false; btn.textContent='Pay 1 Pi'; },
+      onError:(e)=>{ log('Pi Error: '+e.message); btn.disabled=false; btn.textContent='Pay 1 Pi'; }
     });
   }catch(e){
-    log('Error: '+e.message);
+    log('Loi chung: '+e.message);
+    if(e.message && e.message.includes('incomplete')){
+      log('Bi ket payment cu - bam nut xam Clear stuck payment ben duoi!');
+    }
     btn.disabled=false;
+    btn.textContent='Pay 1 Pi';
   }
 };
 </script>
