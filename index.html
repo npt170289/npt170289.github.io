@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spa Khai Hoan - Fix Treo 60s Chuẩn</title>
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <style>
 body{font-family:system-ui,sans-serif;background:#f5f7fb;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;padding:16px}
@@ -36,12 +34,23 @@ function log(m){ logEl.textContent += "\n"+new Date().toLocaleTimeString()+" "+m
 function setStatus(m, ok=false){ statusEl.textContent=m; statusEl.style.background= ok ? "#dcfce7" : "#f1f5f9"; }
 let incomplete = null;
 function onIncompletePaymentFound(p){ incomplete=p; log("!! KẸT CŨ: "+p.identifier+" amount:"+p.amount+" txid:"+(p.transaction?.txid? p.transaction.txid.slice(0,12)+"...":"chưa có")); setStatus("Có payment kẹt! Bấm Clear"); }
-window.addEventListener('load', async ()=>{
-  try{ Pi.init({version:"2.0", sandbox:true}); log("Pi.init sandbox:true TESTNET Ready"); 
-    const r = await fetch(BACKEND+"/api/approve"); const j = await r.json();
-    log("Backend: hasKey="+j.hasKey+" prefix="+j.keyPrefix+" usingEnv="+j.usingEnv); setStatus("Backend OK - Sẵn sàng", true);
-  }catch(e){ log("Init lỗi: "+e.message); setStatus("Init lỗi"); }
-});
+
+async function initApp(){
+  try{
+    if(!window.Pi){ log("Pi SDK chưa có, đợi 1s..."); setTimeout(initApp, 1000); return; }
+    Pi.init({version:"2.0", sandbox:true});
+    log("Pi.init sandbox:true TESTNET Ready");
+    setStatus("Backend OK - Sẵn sàng", true); // Đổi: set sẵn sàng ngay sau Pi.init, không đợi fetch
+    // Check backend riêng, không block UI
+    try{
+      const r = await fetch(BACKEND+"/api/approve", {method:"GET"});
+      const j = await r.json();
+      log("Backend: hasKey="+j.hasKey+" prefix="+j.keyPrefix);
+    }catch(e){ log("Backend check lỗi (không sao): "+e.message); }
+  }catch(e){ log("Init lỗi: "+e.message); setStatus("Init lỗi: "+e.message); }
+}
+initApp();
+
 async function fetchTimeout(url, opts={}, ms=13000){
   const ctrl = new AbortController(); const t=setTimeout(()=>ctrl.abort(), ms);
   try{ const res= await fetch(url,{...opts, signal:ctrl.signal}); clearTimeout(t); return res; }catch(e){ clearTimeout(t); throw e; }
@@ -69,4 +78,39 @@ btnPay.onclick = async ()=>{
   try{
     const auth= await Pi.authenticate(['username','payments'], onIncompletePaymentFound);
     if(incomplete){ log("Đang kẹt, clear trước"); setStatus("Đang kẹt - bấm Clear"); btnPay.disabled=false; btnPay.textContent="Pay 1 Pi Test"; return; }
-    log("Auth OK @"+auth.user.username+" -> create
+    log("Auth OK @"+auth.user.username+" -> createPayment 1 Pi");
+    await Pi.createPayment({amount:1.0, memo:"Spa Khai Hoan - 1 Pi Test - Fix 60s", metadata:{orderId:"ORDER_12345", testnet:true}},{
+      onReadyForServerApproval: async (paymentId)=>{
+        log("onReadyForServerApproval: "+paymentId+" -> gửi backend approve NGAY");
+        setStatus("Có paymentId, đang approve backend...");
+        try{
+          const r= await fetchTimeout(BACKEND+"/api/approve",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentId})});
+          const txt= await r.text(); let data; try{ data=JSON.parse(txt);}catch{ data={raw:txt}; }
+          log("Approve HTTP "+r.status+" body:"+JSON.stringify(data).slice(0,600));
+          if(!r.ok || !data.success){
+            const detail = data.error || data.hint || txt;
+            log("!!! APPROVE FAIL: "+JSON.stringify(detail).slice(0,500));
+            throw new Error("Backend approve fail "+r.status);
+          }
+          log("Approve OK! Đợi ví hiện Confirm..."); setStatus("Approve OK - Đợi ví Confirm...", true);
+          return data;
+        }catch(e){ log("Approve exception: "+e.message); setStatus("Approve lỗi: "+e.message); throw e; }
+      },
+      onReadyForServerCompletion: async (paymentId, txid)=>{
+        log("onReadyForServerCompletion: "+paymentId+" txid:"+txid.slice(0,16)+"... -> complete backend");
+        setStatus("Đã có txid, đang complete...");
+        try{
+          const r= await fetchTimeout(BACKEND+"/api/complete",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({paymentId, txid})});
+          const j= await r.json(); log("Complete HTTP "+r.status+" "+JSON.stringify(j).slice(0,600));
+          if(j.success){ log("🎉 XONG 1 TK! LUM!"); setStatus("🎉 Thanh toán thành công!", true); btnPay.textContent="XONG 1 TK!"; btnPay.style.background="#16a34a"; return j; }
+          else throw new Error(JSON.stringify(j).slice(0,300));
+        }catch(e){ log("Complete lỗi: "+e.message); setStatus("Complete lỗi: "+e.message); throw e; }
+      },
+      onCancel: (paymentId)=>{ log("User Cancel: "+paymentId); setStatus("Đã hủy"); btnPay.disabled=false; btnPay.textContent="Pay 1 Pi Test"; },
+      onError: (error, payment)=>{ log("onError: "+error.message); setStatus("Lỗi: "+error.message); btnPay.disabled=false; btnPay.textContent="Pay 1 Pi Test"; }
+    });
+  }catch(e){ log("Lỗi chung: "+e.message); setStatus("Lỗi: "+e.message); btnPay.disabled=false; btnPay.textContent="Pay 1 Pi Test"; }
+};
+</script>
+</body>
+</html>
