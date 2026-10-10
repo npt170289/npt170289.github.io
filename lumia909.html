@@ -1,32 +1,34 @@
-const callbacks = {
-            onReadyForServerApproval: function(paymentId) {
-                writeLog("Mã GD chờ duyệt: " + paymentId);
-                // Gọi API Approve qua Vercel
-                fetch('https://lumia-backend.vercel.app/api/approve', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ paymentId })
-                })
-                .then(res => res.json())
-                .then(data => writeLog("Server Approve thành công: " + JSON.stringify(data)))
-                .catch(err => writeLog("Lỗi Approve: " + err));
-            },
-            onReadyForServerCompletion: function(paymentId, txid) {
-                writeLog("Thành công! Đang gọi Complete...");
-                // Gọi API Complete qua Vercel
-                fetch('https://lumia-backend.vercel.app/api/complete', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ paymentId, txid })
-                })
-                .then(res => res.json())
-                .then(data => writeLog("✅ Hoàn tất GD! TXID: " + txid.substring(0, 8)))
-                .catch(err => writeLog("Lỗi Complete: " + err));
-            },
-            onCancel: function(paymentId) {
-                writeLog("Đã hủy thanh toán.");
-            },
-            onError: function(error, payment) {
-                writeLog("Lỗi Pi SDK: " + error.message);
-            }
-        };
+<script>
+    const callbacks = {
+        onReadyForServerApproval: function(paymentId) {
+            writeLog("Mã GD chờ duyệt: " + paymentId);
+            // Gọi API Approve qua Vercel
+            fetch('https://lumia-backend.vercel.app/api/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentId })
+            })
+            .then(res => res.json())
+            .then(data => writeLog("Server Approve thành công: " + JSON.stringify(data)))
+            .catch(err => writeLog("Lỗi Approve: " + err));
+        },
+        onReadyForServerCompletion: function(paymentId, txid) {
+            writeLog("Thành công! Đang gọi Complete...");
+            // Gọi API Complete qua Vercel
+            fetch('https://lumia-backend.vercel.app/api/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentId, txid })
+            })
+            .then(res => res.json())
+            .then(data => writeLog("✅ Hoàn tất GD! TXID: " + txid.substring(0, 8)))
+            .catch(err => writeLog("Lỗi Complete: " + err));
+        },
+        onCancel: function(paymentId) {
+            writeLog("Đã hủy thanh toán.");
+        },
+        onError: function(error, payment) {
+            writeLog("Lỗi Pi SDK: " + error.message);
+        }
+    };
+</script>
