@@ -1,97 +1,32 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lumia 909 - Pi App</title>
-    <!-- Thư viện Pi SDK -->
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: sans-serif; background: #0f172a; color: #fff; padding: 20px; display: flex; justify-content: center; }
-        .card { width: 100%; max-width: 400px; background: #1e293b; padding: 20px; border-radius: 16px; text-align: center; border: 1px solid #334155; }
-        h2 { color: #38bdf8; margin-bottom: 8px; }
-        p { color: #94a3b8; font-size: 14px; margin-bottom: 16px; }
-        .status { background: #0f172a; padding: 10px; border-radius: 8px; font-size: 13px; color: #38bdf8; margin-bottom: 15px; word-break: break-all; }
-        .btn { width: 100%; padding: 12px; margin: 6px 0; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-auth { background: #0284c7; color: white; }
-        .btn-pay { background: #10b981; color: white; }
-        #log { background: #000; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; color: #a7f3d0; margin-top: 15px; height: 120px; overflow-y: auto; text-align: left; }
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <h2>📱 LUMIA 909</h2>
-    <p>Ứng dụng thử nghiệm Pi Testnet</p>
-
-    <div class="status" id="userInfo">⏳ Chưa xác thực tài khoản Pi</div>
-
-    <button class="btn btn-auth" onclick="loginPi()">🔑 Xác thực tài khoản Pi</button>
-    <button class="btn btn-pay" onclick="createPayment()">⚡ Thanh toán 0.1 Test Pi</button>
-
-    <div id="log"></div>
-</div>
-
-<script>
-    const Pi = window.Pi;
-    Pi.init({ version: "2.0", sandbox: true });
-
-    function writeLog(msg) {
-        const log = document.getElementById('log');
-        log.innerHTML += "> " + msg + "<br>";
-        log.scrollTop = log.scrollHeight;
-    }
-
-    // 1. Xác thực tài khoản
-    async function loginPi() {
-        writeLog("Đang kết nối Pi SDK...");
-        try {
-            const scopes = ['username', 'payments'];
-            function onIncompletePaymentFound(payment) {
-                writeLog("Phát hiện GD dở dang: " + payment.identifier);
-            }
-
-            const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
-            document.getElementById('userInfo').innerHTML = `✅ Chào: <b>${auth.user.username}</b>`;
-            writeLog("Đã đăng nhập: " + auth.user.username);
-        } catch (err) {
-            writeLog("Lỗi đăng nhập: " + err.message);
-        }
-    }
-
-    // 2. Tạo thanh toán
-    function createPayment() {
-        writeLog("Khởi tạo GD 0.1 Pi...");
-        const paymentData = {
-            amount: 0.1,
-            memo: "Thử nghiệm Lumia 909",
-            metadata: { appId: "lumia909" }
-        };
-
-        const callbacks = {
+const callbacks = {
             onReadyForServerApproval: function(paymentId) {
                 writeLog("Mã GD chờ duyệt: " + paymentId);
-                writeLog("Đang tự động Approve giao dịch...");
-                // Giả lập Approve thành công để Pi Browser bật Popup ví
-                setTimeout(() => {
-                    writeLog("✅ Server đã Approve! Chuẩn bị mở ví...");
-                }, 1000);
+                // Gọi API Approve qua Vercel
+                fetch('https://lumia-backend.vercel.app/api/approve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ paymentId })
+                })
+                .then(res => res.json())
+                .then(data => writeLog("Server Approve thành công: " + JSON.stringify(data)))
+                .catch(err => writeLog("Lỗi Approve: " + err));
             },
             onReadyForServerCompletion: function(paymentId, txid) {
-                writeLog("✅ Thành công! TXID: " + txid.substring(0, 8) + "...");
+                writeLog("Thành công! Đang gọi Complete...");
+                // Gọi API Complete qua Vercel
+                fetch('https://lumia-backend.vercel.app/api/complete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ paymentId, txid })
+                })
+                .then(res => res.json())
+                .then(data => writeLog("✅ Hoàn tất GD! TXID: " + txid.substring(0, 8)))
+                .catch(err => writeLog("Lỗi Complete: " + err));
             },
             onCancel: function(paymentId) {
-                writeLog("❌ Người dùng đã hủy thanh toán.");
+                writeLog("Đã hủy thanh toán.");
             },
             onError: function(error, payment) {
-                writeLog("❌ Lỗi: " + error.message);
+                writeLog("Lỗi Pi SDK: " + error.message);
             }
         };
-
-        Pi.createPayment(paymentData, callbacks);
-    }
-</script>
-
-</body>
-</html>
