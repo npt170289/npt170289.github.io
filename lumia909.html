@@ -30,13 +30,17 @@
             logBox.scrollTop = logBox.scrollHeight;
         }
 
-        // Khởi tạo Pi SDK
-        Pi.init({ version: "2.0", sandbox: true });
+        // Khởi tạo Pi SDK với cấu hình Sandbox
+        try {
+            Pi.init({ version: "2.0", sandbox: true });
+            writeLog("Pi SDK đã khởi tạo thành công.");
+        } catch (e) {
+            writeLog("Lỗi khởi tạo Pi SDK: " + e.message);
+        }
 
         const callbacks = {
             onReadyForServerApproval: function(paymentId) {
                 writeLog("Mã GD chờ duyệt: " + paymentId);
-                // Gọi API Approve qua Vercel
                 fetch('https://lumia-backend.vercel.app/api/approve', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -48,32 +52,36 @@
             },
             onReadyForServerCompletion: function(paymentId, txid) {
                 writeLog("Thành công! Đang gọi Complete...");
-                // Gọi API Complete qua Vercel
                 fetch('https://lumia-backend.vercel.app/api/complete', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ paymentId, txid })
                 })
                 .then(res => res.json())
-                .then(data => writeLog("✅ Hoàn tất GD! TXID: " + txid.substring(0, 8)))
+                .then(data => writeLog("✅ Hoàn tất GD! TXID: " + (txid ? txid.substring(0, 8) : '')))
                 .catch(err => writeLog("Lỗi Complete: " + err));
             },
             onCancel: function(paymentId) {
                 writeLog("Đã hủy thanh toán.");
             },
             onError: function(error, payment) {
-                writeLog("Lỗi Pi SDK: " + error.message);
+                writeLog("Lỗi Pi SDK: " + (error ? error.message : JSON.stringify(error)));
             }
         };
 
         function payWithPi() {
             writeLog("Đang tạo yêu cầu thanh toán...");
-            const paymentData = {
-                amount: 1.0,
-                memo: "Thanh toán Lumia 909",
-                metadata: { productId: "lumia_909_test" },
-            };
-            Pi.createPayment(paymentData, callbacks);
+            try {
+                const paymentData = {
+                    amount: 1.0,
+                    memo: "Thanh toán Lumia 909",
+                    metadata: { productId: "lumia_909_test" }
+                };
+                
+                Pi.createPayment(paymentData, callbacks);
+            } catch (err) {
+                writeLog("Exception tạo thanh toán: " + err.message);
+            }
         }
     </script>
 </body>
