@@ -11,7 +11,7 @@
         .container { max-width: 500px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-top: 15px; }
         button:hover { background: #0056b3; }
-        #log { background: #222; color: #0f0; padding: 10px; border-radius: 5px; font-family: monospace; height: 150px; overflow-y: auto; margin-top: 15px; font-size: 12px; }
+        #log { background: #222; color: #0f0; padding: 10px; border-radius: 5px; font-family: monospace; height: 180px; overflow-y: auto; margin-top: 15px; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -30,7 +30,7 @@
             logBox.scrollTop = logBox.scrollHeight;
         }
 
-        // Khởi tạo Pi SDK với cấu hình Sandbox
+        // 1. Khởi tạo Pi SDK
         try {
             Pi.init({ version: "2.0", sandbox: true });
             writeLog("Pi SDK đã khởi tạo thành công.");
@@ -69,19 +69,32 @@
             }
         };
 
+        // 2. Hàm thanh toán chính (đã tích hợp Authenticate xin quyền "payments")
         function payWithPi() {
-            writeLog("Đang tạo yêu cầu thanh toán...");
-            try {
-                const paymentData = {
-                    amount: 1.0,
-                    memo: "Thanh toán Lumia 909",
-                    metadata: { productId: "lumia_909_test" }
-                };
-                
-                Pi.createPayment(paymentData, callbacks);
-            } catch (err) {
-                writeLog("Exception tạo thanh toán: " + err.message);
+            writeLog("Đang xác thực người dùng & xin quyền...");
+            
+            const scopes = ['payments'];
+            
+            function onIncompletePaymentFound(payment) {
+                writeLog("Phát hiện giao dịch dở dang: " + payment.identifier);
             }
+
+            Pi.authenticate(scopes, onIncompletePaymentFound)
+                .then(function(auth) {
+                    writeLog("Xác thực thành công user: " + auth.user.username);
+                    writeLog("Đang tạo yêu cầu thanh toán...");
+                    
+                    const paymentData = {
+                        amount: 1.0,
+                        memo: "Thanh toán Lumia 909",
+                        metadata: { productId: "lumia_909_test" }
+                    };
+                    
+                    Pi.createPayment(paymentData, callbacks);
+                })
+                .catch(function(error) {
+                    writeLog("Lỗi xác thực: " + error.message);
+                });
         }
     </script>
 </body>
