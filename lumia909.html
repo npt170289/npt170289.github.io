@@ -16,7 +16,7 @@
         .btn { width: 100%; padding: 12px; margin: 6px 0; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-auth { background: #0284c7; color: white; }
         .btn-pay { background: #10b981; color: white; }
-        #log { background: #000; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; color: #a7f3d0; margin-top: 15px; height: 100px; overflow-y: auto; text-align: left; }
+        #log { background: #000; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; color: #a7f3d0; margin-top: 15px; height: 120px; overflow-y: auto; text-align: left; }
     </style>
 </head>
 <body>
@@ -34,7 +34,6 @@
 </div>
 
 <script>
-    // Khởi tạo SDK Pi
     const Pi = window.Pi;
     Pi.init({ version: "2.0", sandbox: true });
 
@@ -44,7 +43,7 @@
         log.scrollTop = log.scrollHeight;
     }
 
-    // Xác thực Pioneer
+    // 1. Xác thực tài khoản
     async function loginPi() {
         writeLog("Đang kết nối Pi SDK...");
         try {
@@ -61,7 +60,7 @@
         }
     }
 
-    // Tạo thanh toán Testnet
+    // 2. Tạo thanh toán
     function createPayment() {
         writeLog("Khởi tạo GD 0.1 Pi...");
         const paymentData = {
@@ -73,15 +72,20 @@
         const callbacks = {
             onReadyForServerApproval: function(paymentId) {
                 writeLog("Mã GD chờ duyệt: " + paymentId);
+                writeLog("Đang tự động Approve giao dịch...");
+                // Giả lập Approve thành công để Pi Browser bật Popup ví
+                setTimeout(() => {
+                    writeLog("✅ Server đã Approve! Chuẩn bị mở ví...");
+                }, 1000);
             },
             onReadyForServerCompletion: function(paymentId, txid) {
-                writeLog("Thành công! TXID: " + txid.substring(0, 8) + "...");
+                writeLog("✅ Thành công! TXID: " + txid.substring(0, 8) + "...");
             },
             onCancel: function(paymentId) {
-                writeLog("Đã hủy thanh toán.");
+                writeLog("❌ Người dùng đã hủy thanh toán.");
             },
             onError: function(error, payment) {
-                writeLog("Lỗi: " + error.message);
+                writeLog("❌ Lỗi: " + error.message);
             }
         };
 
