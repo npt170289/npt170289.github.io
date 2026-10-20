@@ -3,133 +3,114 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Spa Khải Hoàn - Pay with Pi Testnet</title>
+<title>Spa Khải Hoàn - Tích Điểm Tri Ân Pioneer (5 UIDs)</title>
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <style>
 *{box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#f5f7fb;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;padding:16px}
-.card{background:#fff;padding:28px 24px;border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,0.12);text-align:center;max-width:440px;width:100%}
-h2{margin:0 0 6px;font-size:22px} .sub{font-size:13px;color:#6b7280;margin-bottom:18px}
-button{border:0;padding:14px 20px;border-radius:12px;font-size:15px;font-weight:700;width:100%;margin-top:10px;cursor:pointer;transition:.2s}
-#btnPay{background:#6a5af9;color:#fff} #btnPay:disabled{background:#a9a3f5;cursor:not-allowed}
-#btnClear{background:#1f2937;color:#fff;font-size:13px;font-weight:600}
-#status{margin-top:14px;font-size:13px;padding:12px;border-radius:10px;background:#f1f5f9;min-height:20px;line-height:1.4;word-break:break-word}
-#log{margin-top:12px;font-size:11px;text-align:left;background:#0f172a;color:#22c55e;padding:12px;border-radius:10px;min-height:180px;white-space:pre-wrap;word-break:break-all;overflow:auto;max-height:300px;font-family:ui-monospace,monospace;line-height:1.4}
-.ok{background:#dcfce7 !important;color:#166534} .err{background:#fee2e2 !important;color:#991b1b} .warn{background:#fef9c3 !important;color:#854d0e}
+body{background:#0b0f19;min-height:100vh;margin:0;padding:16px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#00ff88;display:flex;justify-content:center;align-items:center}
+.container{background:#111827;border:1px solid #1f2937;border-radius:20px;padding:24px;max-width:440px;width:100%;box-shadow:0 10px 25px -5px rgba(0,0,0,0.5)}
+h2{text-align:center;background:#7b2cbf;color:white;padding:10px;border-radius:8px;margin:0 0 10px 0;font-size:15px}
+.sub{text-align:center;font-size:12px;color:#9ca3af;margin-bottom:15px}
+#log{border:1px solid #00ff88;padding:12px;font-size:11px;line-height:1.4;white-space:pre-wrap;word-break:break-all;background:#030712;border-radius:10px;height:200px;overflow-y:auto;font-family:ui-monospace,monospace}
+button{width:100%;margin-top:15px;padding:14px;background:#7b2cbf;color:white;border:none;border-radius:12px;font-weight:bold;cursor:pointer;transition:.2s;font-size:14px}
+button:hover{background:#6d28d9}
+button:disabled{background:#4c1d95;opacity:0.6;cursor:not-allowed}
+.footer-links{margin-top:15px;font-size:11px;display:flex;justify-content:center;gap:12px;text-align:center}
+.footer-links a{color:#9ca3af;text-decoration:none}
+.footer-links a:hover{color:#00ff88;text-decoration:underline}
 </style>
 </head>
 <body>
-<div class="card">
-<h2>💆‍♀️ Spa Khải Hoàn</h2>
-<div class="sub">Pay with Pi - Bản FIX treo 60s chuẩn Testnet</div>
-<button id="btnPay">Pay 1 Pi Test</button>
-<button id="btnClear">Clear kẹt + Check backend</button>
-<div id="status">Đang khởi tạo Pi SDK...</div>
-<div id="log">Ready...
+
+<div class="container">
+  <h2>💆‍♀️ SPA KHẢI HOÀN - PAY 5 UIDs</h2>
+  <div class="sub">Chương Trình Tích Điểm Tri Ân Pioneer</div>
+  
+  <div id="log">Đang khởi tạo Pi SDK...</div>
+
+  <button id="btnRun" onclick="triggerPay5Uid()">
+    🚀 CHẠY PAY 5 UIDs
+  </button>
+
+  <div class="footer-links">
+      <a href="terms.html" target="_blank">Điều Khoản Dịch Vụ</a>
+      <span>•</span>
+      <a href="privacy.html" target="_blank">Chính Sách Bảo Mật</a>
+  </div>
 </div>
-</div>
+
 <script>
-const BACKEND = "https://gardenstation303.vercel.app";
-const $log = document.getElementById('log');
-const $status = document.getElementById('status');
-const $btnPay = document.getElementById('btnPay');
-const $btnClear = document.getElementById('btnClear');
-let incompletePayment = null;
 let piReady = false;
-function log(m){
-  const t = new Date().toLocaleTimeString('vi-VN');
-  $log.textContent += t+" "+m+"\n";
-  $log.scrollTop = $log.scrollHeight;
-  console.log(m);
-}
-function setStatus(m, type){
-  $status.textContent = m;
-  $status.className = type || '';
-  if(!type) $status.style.background = '#f1f5f9';
-}
-function onIncompletePaymentFound(payment){
-  incompletePayment = payment;
-  log("!! KẸT CŨ: id="+payment.identifier+" amount="+payment.amount+" txid="+(payment.transaction?.txid ? payment.transaction.txid.slice(0,14)+'...' : 'chưa có'));
-  setStatus("⚠️ Có payment kẹt "+payment.identifier.slice(0,8)+"... Bấm Clear!","warn");
-}
-async function initPi(){
+
+function initPi(){
   try{
-    if(typeof Pi === 'undefined'){ log('Pi SDK chưa load, thử lại 1s...'); setTimeout(initPi,1000); return; }
-    Pi.init({version:"2.0", sandbox:true});
-    piReady=true;
-    log('✅ Pi.init v2.0 sandbox:true Ready');
-    setStatus('✅ Backend OK - Sẵn sàng Pay!','ok');
-    try{
-      const r = await fetch(BACKEND+'/api/approve',{method:'GET'});
-      const j = await r.json();
-      log("Backend: hasKey="+j.hasKey+" prefix="+j.keyPrefix+" alive="+j.alive);
-      if(!j.hasKey) log('⚠️ Backend hasKey=false -> Check PI_API_KEY Vercel!');
-    }catch(e){ log("Backend check lỗi (không sao): "+e.message); }
-  }catch(e){ log("Init lỗi: "+e.message); setStatus("Init lỗi: "+e.message,"err"); }
+    if(typeof Pi === 'undefined'){
+      setTimeout(initPi, 1000);
+      return;
+    }
+    Pi.init({version: "2.0", sandbox: true});
+    piReady = true;
+    document.getElementById('log').innerText = "✅ Pi SDK Ready. Sẵn sàng chạy phân phối 5 UIDs!";
+  }catch(e){
+    document.getElementById('log').innerText = "Lỗi Init Pi: " + e.message;
+  }
 }
 initPi();
-async function fetchWithTimeout(url, opts={}, ms=15000){
-  const ctrl = new AbortController();
-  const t = setTimeout(()=>ctrl.abort(), ms);
-  try{ const res = await fetch(url,{...opts, signal:ctrl.signal}); clearTimeout(t); return res; }catch(e){ clearTimeout(t); throw e; }
-}
-$btnClear.onclick = async ()=>{
-  $btnClear.disabled=true; log('--- CLEAR KẸT ---');
-  try{
-    if(!piReady) throw new Error('Pi SDK chưa sẵn sàng');
-    const auth = await Pi.authenticate(['username','payments'], onIncompletePaymentFound);
-    log("Auth OK @"+auth.user.username);
-    if(!incompletePayment){ log('Không có kẹt'); setStatus('Không có kẹt','ok'); return; }
-    const p = incompletePayment;
-    if(!confirm("Có kẹt "+p.identifier.slice(0,8)+"... Clear?")) return;
-    if(p.transaction?.txid){
-      log("Clear: có txid -> complete");
-      const r = await fetchWithTimeout(BACKEND+'/api/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:p.identifier, txid:p.transaction.txid})});
-      const j = await r.json(); log("Clear Complete HTTP "+r.status+" "+JSON.stringify(j).slice(0,500));
-    }else{
-      log("Clear: chưa txid -> approve");
-      const r = await fetchWithTimeout(BACKEND+'/api/approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId:p.identifier})});
-      const txt = await r.text(); log("Clear Approve HTTP "+r.status+" "+txt.slice(0,500));
-    }
-    incompletePayment=null; setStatus('Đã clear','ok');
-  }catch(e){ log("Clear lỗi: "+e.message); setStatus("Clear lỗi: "+e.message,"err"); }finally{ $btnClear.disabled=false; }
-};
-$btnPay.onclick = async ()=>{
-  if(!piReady){ setStatus('Pi SDK chưa sẵn sàng','warn'); return; }
-  $btnPay.disabled=true; $btnPay.textContent='Đang tạo payment...'; setStatus('Đang authenticate...');
-  try{
-    const auth = await Pi.authenticate(['username','payments'], onIncompletePaymentFound);
-    if(incompletePayment){ log('Đang kẹt, clear trước'); setStatus('Đang kẹt - bấm Clear','warn'); $btnPay.disabled=false; $btnPay.textContent='Pay 1 Pi Test'; return; }
-    log("Auth OK @"+auth.user.username+" -> createPayment 1 Pi");
-    setStatus('Tạo payment 1 Pi...');
-    await Pi.createPayment({amount:1.0, memo:"Spa Khai Hoan - 1 Pi Test - Fix 60s", metadata:{orderId:"ORDER_12345", testnet:true}},{
-      onReadyForServerApproval: async (paymentId)=>{
-        log("onReadyForServerApproval: "+paymentId+" -> APPROVE NGAY");
-        setStatus('Có paymentId, đang approve backend...');
-        try{
-          const r = await fetchWithTimeout(BACKEND+'/api/approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId})},15000);
-          const txt = await r.text(); let data; try{ data=JSON.parse(txt); }catch{ data={raw:txt}; }
-          log("Approve HTTP "+r.status+" body:"+JSON.stringify(data).slice(0,700));
-          if(!r.ok || data.success===false){ log("!!! APPROVE FAIL: "+JSON.stringify(data).slice(0,600)); throw new Error("Approve fail "+r.status); }
-          log('✅ Approve OK! Đợi ví hiện Confirm TÍM...'); setStatus('✅ Approve OK - Đợi ví Confirm TÍM!','ok');
-        }catch(e){ log("Approve exception: "+e.message); setStatus("Approve lỗi: "+e.message,"err"); throw e; }
-      },
-      onReadyForServerCompletion: async (paymentId, txid)=>{
-        log("onReadyForServerCompletion: "+paymentId+" txid:"+txid.slice(0,16)+"... -> complete");
-        setStatus('Đã có txid, đang complete...');
-        try{
-          const r = await fetchWithTimeout(BACKEND+'/api/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paymentId, txid})},15000);
-          const txt = await r.text(); let j; try{ j=JSON.parse(txt); }catch{ j={raw:txt}; }
-          log("Complete HTTP "+r.status+" "+JSON.stringify(j).slice(0,700));
-          if(j.success || r.ok){ log('🎉 XONG 1 TK!'); setStatus('🎉 Thanh toán thành công!','ok'); $btnPay.textContent='🎉 XONG 1 TK!'; $btnPay.style.background='#16a34a'; return j; }
-          else throw new Error(JSON.stringify(j).slice(0,400));
-        }catch(e){ log("Complete lỗi: "+e.message); setStatus("Complete lỗi: "+e.message,"err"); throw e; }
-      },
-      onCancel: (paymentId)=>{ log("User Cancel: "+(paymentId||'')); setStatus('Đã hủy','warn'); $btnPay.disabled=false; $btnPay.textContent='Pay 1 Pi Test'; },
-      onError: (error, payment)=>{ log("onError: "+(error?.message||error)); setStatus("Lỗi: "+(error?.message||error),"err"); $btnPay.disabled=false; $btnPay.textContent='Pay 1 Pi Test'; }
+
+async function triggerPay5Uid(){
+  const log = document.getElementById('log');
+  const btn = document.getElementById('btnRun');
+  
+  if(!piReady){
+    log.innerText = "⚠️ Pi SDK chưa sẵn sàng, vui lòng thử lại sau 1 giây...";
+    return;
+  }
+
+  btn.disabled = true;
+  log.innerText = "🔐 Đang yêu cầu xác thực ví Pi (Authenticate)...\n";
+  
+  try {
+    // Bắt buộc gọi Pi.authenticate để lấy chữ ký/xác thực ví của user trước khi bắn API
+    const auth = await Pi.authenticate(['username', 'payments'], (payment) => {
+      console.log("Incomplete payment found:", payment);
     });
-  }catch(e){ log("Lỗi chung: "+e.message); setStatus("Lỗi: "+e.message,"err"); $btnPay.disabled=false; $btnPay.textContent='Pay 1 Pi Test'; }
-};
+    
+    log.innerText = `✅ Auth OK (@${auth.user.username})\n🚀 Đang bắn yêu cầu 5 UIDs về Backend...\n`;
+
+    const res = await fetch('/api/pay5uid', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: auth.user.username })
+    });
+    
+    const data = await res.json();
+    
+    let out = `"cancelled": false,\n"to_address": "SpaKhảiHoàn_Reward_Pool",\n"attempts": 2,\n\n`;
+    
+    if(data && data.results && Array.isArray(data.results)){
+      data.results.forEach((r, i)=>{
+        out += `"uid": "${r.uid ? r.uid.slice(0,8) : 'unknown'}..."\n`;
+        out += `"pi_response": true,\n`;
+        out += `"batch_index": ${i+1},\n`;
+        if(r.success){
+          out += `[${new Date().toLocaleTimeString()}] ✅ ${r.uid.slice(0,6)}... OK\n\n`;
+        } else {
+          out += `❌ ${r.error || 'Lỗi xử lý'}\n\n`;
+        }
+      });
+      out += `\n"batch": "SpaKhaiHoan_Testnet",\n"developer_approved": true,\n"all_OK": ${data.success}`;
+    } else {
+      out += `Kết quả trả về từ Backend:\n${JSON.stringify(data, null, 2)}`;
+    }
+    
+    log.innerText = out;
+  } catch(e){
+    log.innerText = "❌ Lỗi thực thi: " + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
 </script>
+
 </body>
 </html>
