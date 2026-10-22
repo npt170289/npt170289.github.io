@@ -1,17 +1,4 @@
 export default async function handler(req, res) {
-  // CORS Headers bảo vệ kết nối từ GitHub Pages sang Vercel
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ success: false, error: "Method Not Allowed" });
@@ -30,7 +17,7 @@ export default async function handler(req, res) {
     targetList = [body.uid.trim()];
   }
 
-  // 5 UID CHÍNH THỦC CỦA SPA KHẢI HOÀN (Đã đối chiếu chuẩn)
+  // 5 UID CHUẨN SPAKHAIHOAN - KUVEP TEST
   const DEFAULT_5UIDS = [
     "cad0a30e-eda3-46b3-a30c-ce71ee898db9",
     "d434faf1-51ab-48ae-9b2f-e48ea4f699aa",
@@ -38,7 +25,6 @@ export default async function handler(req, res) {
     "6d7867e6-9abb-4f76-9cb4-85e146eee486",
     "f27c937e-a7ae-4bf6-9455-9c7af9d3428f"
   ];
-  
   if (targetList.length === 0) targetList = DEFAULT_5UIDS;
   const amount = Number(body.amount) || 1;
 
@@ -74,7 +60,7 @@ export default async function handler(req, res) {
       }
 
       if (paymentId) {
-        let result = await piFetch(`/v2/payments/${paymentId}/complete`, "POST", { txid: "spakhaihoan_retry_complete" });
+        let result = await piFetch(`/v2/payments/${paymentId}/complete`, "POST", { txid: "a2u_retry_complete" });
         if (!result.ok) {
           result = await piFetch(`/v2/payments/${paymentId}/cancel`, "POST");
         }
@@ -96,8 +82,8 @@ export default async function handler(req, res) {
       const piPayload = {
         payment: {
           amount,
-          memo: `Spa Khai Hoan Reward to @${uid.substring(0,6)} - ${i+1}/${targetList.length}`,
-          metadata: { target_uid: uid, batch_index: i, attempt },
+          memo: `Spa Khai Hoan A2U to @${uid.substring(0,6)} - ${i+1}/${targetList.length}`,
+          metadata: { target_uid: uid, batch_index: i, attempt, app: "spakhaihoan" },
           uid,
         },
       };
@@ -125,7 +111,7 @@ export default async function handler(req, res) {
       }
     }
 
-    if (finalResult && finalResult.retrying) {
+    if (finalResult.retrying) {
       const lastPayload = {
         payment: { amount, memo: `Spa Khai Hoan Retry ${uid}`, metadata: { target_uid: uid }, uid }
       };
@@ -142,6 +128,6 @@ export default async function handler(req, res) {
     success: allOk,
     total: results.length,
     results,
-    note: "Spa Khai Hoan A2U Batch Payment Success with auto cancel/retry"
+    note: "Fixed ongoing_payment_found by auto cancel + retry - spakhaihoan KUVEP"
   });
 }
