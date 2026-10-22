@@ -106,15 +106,13 @@
     }
 
     async function authenticateUser() {
-        log("⏳ Đang gọi Pi.authenticate()...");
+        log("⏳ Đang gọi Pi.authenticate() cấp đủ quyền...");
         try {
-            const scopes = ['username', 'payments'];
+            // Khai báo đủ 3 quyền bao gồm wallet_address
+            const scopes = ['username', 'payments', 'wallet_address'];
             
             function onIncompletePaymentFound(payment) {
                 log("⚠️ Bỏ qua giao dịch dở dang: " + payment.identifier);
             }
 
-            const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
-            log("🎉 Cấp quyền thành công! UID: " + auth.user.uid);
-
-            let uids = getStoredUIDs();
+            const
