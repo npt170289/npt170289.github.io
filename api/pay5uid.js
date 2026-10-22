@@ -16,10 +16,13 @@ export default async function handler(req, res) {
   if (!accessToken) return res.status(401).json({ error: "Thieu accessToken" });
   try {
     const meCheck = await fetch(`https://api.minepi.com/v2/me`, { headers: { Authorization: `Bearer ${accessToken}` } }).then(r=>r.json());
+    console.log(`[AUTH] Me UID: ${meCheck.uid} vs ADMIN: ${ADMIN_UID}`);
     if (meCheck.uid !== ADMIN_UID) {
+      console.log(`[AUTH] 403 Forbidden - ${meCheck.uid} is not admin`);
       return res.status(403).json({ success:false, error:`403 Forbidden - Chi chinh chu moi duoc pay` });
     }
   } catch(e) {
+    console.log(`[AUTH ERROR]`, e.message);
     return res.status(401).json({ error: "accessToken khong hop le" });
   }
 
@@ -77,12 +80,21 @@ export default async function handler(req, res) {
       attempt++;
       const piPayload = { payment: { amount, memo: `Spa Khai Hoan Testnet A2U @${uid.substring(0,6)} - ${i+1}/${targetList.length}`, metadata: { target_uid: uid, batch_index: i, attempt, app: "spakhaihoan", env: "testnet" }, uid } };
       const piResponse = await piFetch("/v2/payments", "POST", piPayload);
-      if (piResponse.ok) { finalResult = { uid, success: true, pi_response: piResponse.data, attempts: attempt }; break; }
+      if (piResponse.ok) { 
+        console.log(`[PAY OK] ${i+1}/${targetList.length} UID ${uid} SUCCESS`);
+        finalResult = { uid, success: true, pi_response: piResponse.data, attempts: attempt }; 
+        break; 
+      }
       else {
+        console.log(`[PAY FAIL] ${i+1}/${targetList.length} UID ${uid} Status ${piResponse.status}`, JSON.stringify(piResponse.data).slice(0,500));
         const errStr = JSON.stringify(piResponse.data).toLowerCase();
         if (errStr.includes("ongoing_payment_found") || errStr.includes("ongoing payment")) {
           const cancelRes = await cancelOngoingIfFound(piResponse.data);
-          if (cancelRes.cancelled) { finalResult = { uid, success: false, retrying: true, cancelled_old: cancelRes.paymentId }; continue; }
+          if (cancelRes.cancelled) { 
+            console.log(`[CANCEL OK] ${uid} cancelled ${cancelRes.paymentId}, retrying...`);
+            finalResult = { uid, success: false, retrying: true, cancelled_old: cancelRes.paymentId }; 
+            continue; 
+          }
           else { finalResult = { uid, success: false, error: "ongoing_payment_found but cannot cancel", details: piResponse.data, status: piResponse.status }; break; }
         } else { finalResult = { uid, success: false, error: "Pi API rejected", details: piResponse.data, status: piResponse.status, attempts: attempt }; break; }
       }
@@ -90,11 +102,17 @@ export default async function handler(req, res) {
     if (finalResult && finalResult.retrying) {
       const lastPayload = { payment: { amount, memo: `Spa Khai Hoan Retry ${uid}`, metadata: { target_uid: uid }, uid } };
       const lastResp = await piFetch("/v2/payments", "POST", lastPayload);
+      console.log(`[RETRY] UID ${uid} ${lastResp.ok ? 'SUCCESS' : 'FAIL'} Status ${lastResp.status}`);
       finalResult = lastResp.ok ? { uid, success: true, pi_response: lastResp.data } : { uid, success: false, error: "Failed after cancel", details: lastResp.data };
     }
     results.push(finalResult);
     if (i < targetList.length - 1) await new Promise(r => setTimeout(r, 800));
   }
+
+  const successCount = results.filter(r=>r.success).length;
+  console.log(`[SUMMARY] Total: ${results.length}, Success: ${successCount}, Fail: ${results.length - successCount}`);
+  results.forEach(r => console.log(`-> UID ${r.uid.substring(0,8)}... : ${r.success ? '200 OK' : `FAIL ${r.status || ''} ${r.error || ''}`}`));
+
   const allOk = results.every(r => r.success);
-  return res.status(allOk ? 200 : 207).json({ success: allOk, total: results.length, results, note: "Spa Khai Hoan Testnet A2U - Chinh chu only" });
+  return res.status(allOk ? 200 : 207).json({ success: allOk, total: results.length, successCount, results, note: "Spa Khai Hoan Testnet A2U - Chinh chu only" });
 }
