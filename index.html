@@ -23,7 +23,7 @@
         .uid-item { background: #1f2937; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; word-break: break-all; display: flex; justify-content: space-between; align-items: center; }
         .status { font-weight: bold; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
         .status-ok { background: #065f46; color: #34d399; }
-        #log { background: #000; color: #00ff88; padding: 10px; border-radius: 8px; font-size: 11px; font-family: monospace; height: 150px; overflow-y: auto; margin-top: 15px; }
+        #log { background: #000; color: #00ff88; padding: 10px; border-radius: 8px; font-size: 11px; font-family: monospace; height: 160px; overflow-y: auto; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -118,73 +118,3 @@
             log("🎉 Cấp quyền thành công! UID: " + auth.user.uid);
 
             let uids = getStoredUIDs();
-            const exists = uids.some(u => u.uid === auth.user.uid);
-
-            if(!exists) {
-                uids.push({ uid: auth.user.uid, username: auth.user.username, accessToken: auth.accessToken });
-                localStorage.setItem("spa_uids", JSON.stringify(uids));
-                renderUIDs();
-                log("✅ Đã lưu UID này vào máy!");
-            } else {
-                log("ℹ️ UID này đã có sẵn trong danh sách.");
-            }
-
-        } catch(err) {
-            log("❌ Lỗi Authenticate: " + (err.message || JSON.stringify(err)));
-        }
-    }
-
-    // Hàm gọi API Pay A2U chính thức qua Vercel Backend
-    async function triggerA2UPayment() {
-        log("🚀 Đang gửi lệnh Pay A2U sang Vercel Backend...");
-        try {
-            const stored = getStoredUIDs();
-            const uidsToSend = stored.length > 0 ? stored.map(u => u.uid) : [];
-
-            const response = await fetch("https://spakhaihoan.vercel.app/api/pay5uid", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ 
-                    amount: 1,
-                    uids: uidsToSend.length > 0 ? uidsToSend : undefined 
-                })
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                log("🎉 THANH TOÁN A2U 5/5 THÀNH CÔNG RỰC RỠ!");
-                log("Tổng giao dịch: " + data.total);
-                console.log("Chi tiết:", data);
-            } else {
-                log("⚠️ Kết quả trả về từ Pi API:");
-                log(JSON.stringify(data.results || data, null, 2));
-            }
-        } catch (err) {
-            log("❌ Lỗi kết nối Backend: " + err.message);
-        }
-    }
-
-    function copyUIDs() {
-        const uids = getStoredUIDs();
-        if(uids.length === 0) {
-            alert("Chưa có UID nào!");
-            return;
-        }
-        navigator.clipboard.writeText(JSON.stringify(uids.map(u => u.uid), null, 2));
-        alert("Đã copy danh sách UIDs!");
-    }
-
-    function clearUIDs() {
-        if(confirm("Xóa danh sách UID?")) {
-            localStorage.removeItem("spa_uids");
-            renderUIDs();
-            log("🗑️ Đã xóa danh sách UID.");
-        }
-    }
-
-    renderUIDs();
-</script>
-
-</body>
-</html>
