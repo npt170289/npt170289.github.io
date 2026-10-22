@@ -49,7 +49,7 @@ async function pay5(){
   }
   document.getElementById('log').innerText = "Đang pay 5 UIDs...";
   try{
-    const r = await fetch('/api/pay5uid',{
+    const r = await fetch('https://spakhaihoan.vercel.app/api/pay5uid',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ accessToken, uids: DEFAULT_5UIDS, amount: 1 })
