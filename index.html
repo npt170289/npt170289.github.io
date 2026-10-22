@@ -1,116 +1,103 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Spa Khải Hoàn - Tích Điểm Tri Ân Pioneer (5 UIDs)</title>
-<script src="https://sdk.minepi.com/pi-sdk.js"></script>
-<style>
-*{box-sizing:border-box}
-body{background:#0b0f19;min-height:100vh;margin:0;padding:16px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#00ff88;display:flex;justify-content:center;align-items:center}
-.container{background:#111827;border:1px solid #1f2937;border-radius:20px;padding:24px;max-width:440px;width:100%;box-shadow:0 10px 25px -5px rgba(0,0,0,0.5)}
-h2{text-align:center;background:#7b2cbf;color:white;padding:10px;border-radius:8px;margin:0 0 10px 0;font-size:15px}
-.sub{text-align:center;font-size:12px;color:#9ca3af;margin-bottom:15px}
-#log{border:1px solid #00ff88;padding:12px;font-size:11px;line-height:1.4;white-space:pre-wrap;word-break:break-all;background:#030712;border-radius:10px;height:200px;overflow-y:auto;font-family:ui-monospace,monospace}
-button{width:100%;margin-top:15px;padding:14px;background:#7b2cbf;color:white;border:none;border-radius:12px;font-weight:bold;cursor:pointer;transition:.2s;font-size:14px}
-button:hover{background:#6d28d9}
-button:disabled{background:#4c1d95;opacity:0.6;cursor:not-allowed}
-.footer-links{margin-top:15px;font-size:11px;display:flex;justify-content:center;gap:12px;text-align:center}
-.footer-links a{color:#9ca3af;text-decoration:none}
-.footer-links a:hover{color:#00ff88;text-decoration:underline}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spa Khải Hoàn - Thu Thập 5 UIDs Hợp Lệ</title>
+    <!-- SDK Pi Network Chính Thức -->
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <style>
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: #0f0f19; color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { background: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 20px; max-width: 450px; width: 100%; }
+        h2 { text-align: center; color: #f59e0b; margin-top: 0; }
+        p { font-size: 13px; color: #9ca3af; text-align: center; }
+        .btn { width: 100%; padding: 14px; margin-top: 10px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-auth { background: #10b981; color: white; }
+        .btn-auth:hover { background: #059669; }
+        .btn-copy { background: #3b82f6; color: white; }
+        .btn-clear { background: #ef4444; color: white; margin-top: 5px; }
+        .uid-list { background: #030712; border: 1px solid #00ff88; border-radius: 10px; padding: 12px; margin-top: 15px; font-size: 12px; }
+        .uid-item { background: #1f2937; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; word-break: break-all; display: flex; justify-content: space-between; align-items: center; }
+        .status { font-weight: bold; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
+        .status-ok { background: #065f46; color: #34d399; }
+        #log { background: #000; color: #00ff88; padding: 10px; border-radius: 8px; font-size: 11px; font-family: monospace; height: 120px; overflow-y: auto; margin-top: 15px; }
+    </style>
 </head>
 <body>
 
 <div class="container">
-  <h2>💆‍♀️ SPA KHẢI HOÀN - PAY 5 UIDs</h2>
-  <div class="sub">Chương Trình Tích Điểm Tri Ân Pioneer</div>
-  
-  <div id="log">Đang khởi tạo Pi SDK...</div>
+    <h2> Spa Khải Hoàn - Collect UIDs</h2>
+    <p>Mở trang này bằng <b>Pi Browser</b> trên 5 điện thoại khác nhau và bấm nút màu xanh dưới đây để ghi nhận UID hợp lệ[cite: 5].</p>
 
-  <button id="btnRun" onclick="triggerPay5Uid()">
-    🚀 CHẠY PAY 5 UIDs
-  </button>
+    <!-- Nút 1: Kích hoạt Sandbox nếu mở qua Browser thường -->
+    <button class="btn btn-auth" onclick="initSandboxMode()" style="background:#8b5cf6;">1. Kích hoạt Sandbox Mode (Nếu cần)[cite: 5]</button>
 
-  <div class="footer-links">
-      <a href="terms.html" target="_blank">Điều Khoản Dịch Vụ</a>
-      <span>•</span>
-      <a href="privacy.html" target="_blank">Chính Sách Bảo Mật</a>
-  </div>
+    <!-- Nút 2: Cấp quyền tài khoản -->
+    <button class="btn btn-auth" onclick="authenticateUser()">2. Bấm Cấp Quyền Ví Tài Khoản Này[cite: 1, 5]</button>
+
+    <div class="uid-list">
+        <strong>📋 Danh sách UIDs đã thu thập (<span id="count">0</span>/5):</strong>
+        <div id="uidContainer" style="margin-top: 8px;"></div>
+    </div>
+
+    <button class="btn btn-copy" onclick="copyUIDs()">Copy Danh Sách 5 UIDs</button>
+    <button class="btn btn-clear" onclick="clearUIDs()">Xóa Làm Lại</button>
+
+    <div id="log">Đang sẵn sàng kết nối Pi SDK...</div>
 </div>
 
 <script>
-let piReady = false;
-
-function initPi(){
-  try{
-    if(typeof Pi === 'undefined'){
-      setTimeout(initPi, 1000);
-      return;
+    // 1. Khởi tạo Pi SDK chính thức
+    try {
+        Pi.init({ version: "2.0", sandbox: true }); // Bật sandbox nếu testnet[cite: 5]
+        log("✅ Pi SDK loaded thành công!");
+    } catch(e) {
+        log("❌ Lỗi load SDK: " + e.message);
     }
-    Pi.init({version: "2.0", sandbox: true});
-    piReady = true;
-    document.getElementById('log').innerText = "✅ Pi SDK Ready. Sẵn sàng chạy phân phối 5 UIDs!";
-  }catch(e){
-    document.getElementById('log').innerText = "Lỗi Init Pi: " + e.message;
-  }
-}
-initPi();
 
-async function triggerPay5Uid(){
-  const log = document.getElementById('log');
-  const btn = document.getElementById('btnRun');
-  
-  if(!piReady){
-    log.innerText = "⚠️ Pi SDK chưa sẵn sàng, vui lòng thử lại sau 1 giây...";
-    return;
-  }
+    function log(msg) {
+        const logBox = document.getElementById("log");
+        logBox.innerHTML += "<div>> " + msg + "</div>";
+        logBox.scrollTop = logBox.scrollHeight;
+    }
 
-  btn.disabled = true;
-  log.innerText = "🔐 Đang yêu cầu xác thực ví Pi (Authenticate)...\n";
-  
-  try {
-    // Bắt buộc gọi Pi.authenticate để lấy chữ ký/xác thực ví của user trước khi bắn API
-    const auth = await Pi.authenticate(['username', 'payments'], (payment) => {
-      console.log("Incomplete payment found:", payment);
-    });
-    
-    log.innerText = `✅ Auth OK (@${auth.user.username})\n🚀 Đang bắn yêu cầu 5 UIDs về Backend...\n`;
+    // Lấy UIDs lưu sẵn từ localStorage
+    function getStoredUIDs() {
+        return JSON.parse(localStorage.getItem("spa_uids") || "[]");
+    }
 
-    const res = await fetch('/api/pay5uid', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: auth.user.username })
-    });
-    
-    const data = await res.json();
-    
-    let out = `"cancelled": false,\n"to_address": "SpaKhảiHoàn_Reward_Pool",\n"attempts": 2,\n\n`;
-    
-    if(data && data.results && Array.isArray(data.results)){
-      data.results.forEach((r, i)=>{
-        out += `"uid": "${r.uid ? r.uid.slice(0,8) : 'unknown'}..."\n`;
-        out += `"pi_response": true,\n`;
-        out += `"batch_index": ${i+1},\n`;
-        if(r.success){
-          out += `[${new Date().toLocaleTimeString()}] ✅ ${r.uid.slice(0,6)}... OK\n\n`;
-        } else {
-          out += `❌ ${r.error || 'Lỗi xử lý'}\n\n`;
+    function renderUIDs() {
+        const uids = getStoredUIDs();
+        const container = document.getElementById("uidContainer");
+        document.getElementById("count").innerText = uids.length;
+        container.innerHTML = "";
+
+        if(uids.length === 0) {
+            container.innerHTML = "<div style='color:#6b7280; text-align:center;'>Chưa có UID nào được ghi nhận</div>";
+            return;
         }
-      });
-      out += `\n"batch": "SpaKhaiHoan_Testnet",\n"developer_approved": true,\n"all_OK": ${data.success}`;
-    } else {
-      out += `Kết quả trả về từ Backend:\n${JSON.stringify(data, null, 2)}`;
-    }
-    
-    log.innerText = out;
-  } catch(e){
-    log.innerText = "❌ Lỗi thực thi: " + e.message;
-  } finally {
-    btn.disabled = false;
-  }
-}
-</script>
 
-</body>
-</html>
+        uids.forEach((item, index) => {
+            container.innerHTML += `
+                <div class="uid-item">
+                    <span><b>#${index+1}:</b> ${item.username ? item.username : item.uid.slice(0,10)+'...'}</span>
+                    <span class="status status-ok">Đã Xác Thực</span>
+                </div>
+            `;
+        });
+    }
+
+    // 2. Kích hoạt Sandbox qua mã thủ công
+    function initSandboxMode() {
+        try {
+            const flag = prompt("Nhập flag Sandbox từ Developer Portal (Nếu chạy sandbox.minepi.com)[cite: 5]:");
+            if(flag) {
+                localStorage.setItem("pi_sandbox", flag);
+                log("🔄 Đã lưu Sandbox Flag. Đang tải lại trang...");
+                location.reload();
+            }
+        } catch(e) {
+            log("❌ Lỗi Sandbox: " + e.message);
+        }
+    }
