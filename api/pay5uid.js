@@ -1,4 +1,18 @@
 export default async function handler(req, res) {
+  // 1. Thêm CORS Headers để cho phép GitHub Pages gửi request sang Vercel
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Cho phép tất cả các domain gọi API
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  );
+
+  // Xử lý request preflight OPTIONS của trình duyệt
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ success: false, error: "Method Not Allowed" });
@@ -17,7 +31,7 @@ export default async function handler(req, res) {
     targetList = [body.uid.trim()];
   }
 
-  // 5 UID chính thức đã xác thực của Spa Khải Hoàn
+  // 5 UID chính thức của Spa Khải Hoàn
   const DEFAULT_5UIDS = [
     "cad0a30e-eda3-46b3-a30c-ce71ee898db9",
     "d434faf1-51ab-48ae-9b2f-e48ea4f699aa",
