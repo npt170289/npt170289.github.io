@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  // CORS Headers cho phép gọi API an toàn
+  // CORS Headers bảo vệ kết nối từ GitHub Pages sang Vercel
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
 
   const PI_API_KEY = process.env.PI_API_KEY;
   if (!PI_API_KEY) {
-    return res.status(500).json({ success: false, error: "Missing PI_API_KEY on Vercel Environment" });
+    return res.status(500).json({ success: false, error: "Missing PI_API_KEY" });
   }
 
   const body = req.body || {};
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
     targetList = [body.uid.trim()];
   }
 
-  // 5 UID chính thức đã xác thực của Spa Khải Hoàn
+  // 5 UID CHÍNH THỦC CỦA SPA KHẢI HOÀN (Đã đối chiếu chuẩn)
   const DEFAULT_5UIDS = [
     "cad0a30e-eda3-46b3-a30c-ce71ee898db9",
     "d434faf1-51ab-48ae-9b2f-e48ea4f699aa",
@@ -97,7 +97,7 @@ export default async function handler(req, res) {
         payment: {
           amount,
           memo: `Spa Khai Hoan Reward to @${uid.substring(0,6)} - ${i+1}/${targetList.length}`,
-          metadata: { target_uid: uid, batch_index: i, attempt, app: "Spa Khai Hoan" },
+          metadata: { target_uid: uid, batch_index: i, attempt },
           uid,
         },
       };
@@ -127,7 +127,7 @@ export default async function handler(req, res) {
 
     if (finalResult && finalResult.retrying) {
       const lastPayload = {
-        payment: { amount, memo: `Spa Khai Hoan Retry ${uid}`, metadata: { target_uid: uid, app: "Spa Khai Hoan" }, uid }
+        payment: { amount, memo: `Spa Khai Hoan Retry ${uid}`, metadata: { target_uid: uid }, uid }
       };
       const lastResp = await piFetch("/v2/payments", "POST", lastPayload);
       finalResult = lastResp.ok ? { uid, success: true, pi_response: lastResp.data } : { uid, success: false, error: "Failed after cancel", details: lastResp.data };
@@ -142,6 +142,6 @@ export default async function handler(req, res) {
     success: allOk,
     total: results.length,
     results,
-    note: "Spa Khai Hoan A2U Batch Payment Official"
+    note: "Spa Khai Hoan A2U Batch Payment Success with auto cancel/retry"
   });
 }
