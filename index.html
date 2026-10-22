@@ -1,90 +1,89 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spa Khải Hoàn - Official A2U Payment</title>
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-    <style>
-        *{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-        body{background:#0f0f19;color:#fff;margin:0;padding:20px;display:flex;justify-content:center}
-        .container{background:#111827;border:1px solid #1f2937;border-radius:16px;padding:20px;max-width:450px;width:100%}
-        h2{text-align:center;color:#f59e0b;margin-top:0}
-        p{font-size:13px;color:#9ca3af;text-align:center}
-        .btn{width:100%;padding:14px;margin-top:10px;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
-        .btn-auth{background:#10b981;color:#fff}
-        .btn-pay{background:#f59e0b;color:#fff}
-        .btn-copy{background:#3b82f6;color:#fff}
-        .btn-clear{background:#ef4444;color:#fff;margin-top:5px}
-        .uid-list{background:#030712;border:1px solid #00ff88;border-radius:10px;padding:12px;margin-top:15px;font-size:12px}
-        .uid-item{background:#1f2937;padding:8px 12px;border-radius:6px;margin-bottom:6px;word-break:break-all;display:flex;justify-content:space-between}
-        .status{font-weight:bold;padding:2px 6px;border-radius:4px;font-size:10px}
-        .status-ok{background:#065f46;color:#34d399}
-        #log{background:#000;color:#00ff88;padding:10px;border-radius:8px;font-size:11px;font-family:monospace;height:160px;overflow-y:auto;margin-top:15px}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spa Khải Hoàn - Testnet A2U</title>
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<style>
+*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}
+body{background:#0f0f19;color:#fff;margin:0;padding:20px;display:flex;justify-content:center}
+.container{background:#111827;border:1px solid #1f2937;border-radius:16px;padding:20px;max-width:450px;width:100%}
+h2{text-align:center;color:#f59e0b;margin:0 0 6px}
+p{font-size:13px;color:#9ca3af;text-align:center;margin:0 0 12px}
+.badge{background:#1e1b4b;color:#a5b4fc;padding:4px 8px;border-radius:6px;font-size:11px;display:block;text-align:center;margin-bottom:12px}
+.btn{width:100%;padding:14px;margin-top:10px;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
+.btn-auth{background:#10b981;color:#fff}
+.btn-pay{background:#f59e0b;color:#fff}
+.btn-copy{background:#3b82f6;color:#fff}
+.btn-clear{background:#ef4444;color:#fff;margin-top:5px}
+.uid-list{background:#030712;border:1px solid #00ff88;border-radius:10px;padding:12px;margin-top:15px;font-size:12px}
+.uid-item{background:#1f2937;padding:8px 12px;border-radius:6px;margin-bottom:6px;word-break:break-all;display:flex;justify-content:space-between}
+#log{background:#000;color:#00ff88;padding:10px;border-radius:8px;font-size:11px;font-family:monospace;height:160px;overflow-y:auto;margin-top:15px}
+</style>
 </head>
 <body>
 <div class="container">
-    <h2>Spa Khải Hoàn</h2>
-    <p>Hệ thống thanh toán A2U chuẩn Pi Network - KUVEP</p>
-    <button class="btn btn-auth" onclick="authenticateUser()">2. Cấp Quyền Đủ Scope (Wallet)</button>
-    <button class="btn btn-pay" onclick="triggerA2UPayment()">3. 🚀 Thực Hiện Pay A2U (5 UIDs)</button>
-    <div class="uid-list">
-        <strong>📋 Danh sách UIDs (<span id="count">0</span>):</strong>
-        <div id="uidContainer" style="margin-top:8px"></div>
-        <div style="margin-top:8px;color:#6b7280;font-size:11px">
-        DEFAULT 5 UID spakhaihoan:<br>
-        cad0a30e-eda3-46b3-a30c-ce71ee898db9<br>
-        d434faf1-51ab-48ae-9b2f-e48ea4f699aa<br>
-        e0c9e631-a143-467e-866e-fbd77e283816<br>
-        6d7867e6-9abb-4f76-9cb4-85e146eee486<br>
-        f27c937e-a7ae-4bf6-9455-9c7af9d3428f
-        </div>
-    </div>
-    <button class="btn btn-copy" onclick="copyUIDs()">Copy Danh Sách UIDs</button>
-    <button class="btn btn-clear" onclick="clearUIDs()">Xóa Làm Lại</button>
-    <div id="log">Sẵn sàng...</div>
+<h2>Spa Khải Hoàn</h2>
+<p>A2U Payment - TESTNET 100%</p>
+<span class="badge">ENV: api.testnet.minepi.com | Pi.init sandbox:true</span>
+<button class="btn btn-auth" onclick="authenticateUser()">Cấp Quyền Đủ Scope (Wallet)</button>
+<button class="btn btn-pay" onclick="triggerA2UPayment()">🚀 Pay A2U Testnet (5 UIDs)</button>
+<div class="uid-list">
+<strong>DEFAULT 5 UID spakhaihoan:</strong>
+<div style="margin-top:8px;color:#9ca3af;font-size:11px;line-height:16px">
+cad0a30e-eda3-46b3-a30c-ce71ee898db9<br>
+d434faf1-51ab-48ae-9b2f-e48ea4f699aa<br>
+e0c9e631-a143-467e-866e-fbd77e283816<br>
+6d7867e6-9abb-4f76-9cb4-85e146eee486<br>
+f27c937e-a7ae-4bf6-9455-9c7af9d3428f<br>
+</div>
+<div id="uidContainer" style="margin-top:10px"></div>
+<div style="margin-top:6px">Local: <span id="count">0</span> UID</div>
+</div>
+<button class="btn btn-copy" onclick="copyUIDs()">Copy UIDs</button>
+<button class="btn btn-clear" onclick="clearUIDs()">Xóa</button>
+<div id="log">Testnet ready...</div>
 </div>
 <script>
-    try{ Pi.init({ version:"2.0", sandbox:true }); log("✅ Pi SDK loaded - sandbox:true cho test"); }catch(e){ log("❌ SDK: "+e.message); }
-    function log(m){ const b=document.getElementById("log"); b.innerHTML+="<div>> "+m+"</div>"; b.scrollTop=b.scrollHeight; }
-    function getStoredUIDs(){ return JSON.parse(localStorage.getItem("spa_uids")||"[]"); }
-    function renderUIDs(){
-        const uids=getStoredUIDs();
-        document.getElementById("count").innerText=uids.length;
-        const c=document.getElementById("uidContainer"); c.innerHTML="";
-        if(uids.length===0){ c.innerHTML="<div style='color:#6b7280;text-align:center'>Chưa có UID local - Backend sẽ dùng 5 UID mặc định spakhaihoan</div>"; return; }
-        uids.forEach((it,i)=>{ c.innerHTML+=`<div class="uid-item"><span><b>#${i+1}:</b> ${it.username||it.uid.slice(0,10)}...</span><span class="status status-ok">Đã Lưu</span></div>`; });
+// TESTNET CHUẨN
+try{ Pi.init({ version:"2.0", sandbox:true }); log("✅ Pi SDK sandbox:true - testnet"); }catch(e){ log("❌ SDK: "+e.message); }
+function log(m){ const b=document.getElementById("log"); b.innerHTML+="<div>> "+m+"</div>"; b.scrollTop=b.scrollHeight; }
+function getStoredUIDs(){ return JSON.parse(localStorage.getItem("spa_uids")||"[]"); }
+function renderUIDs(){
+  const uids=getStoredUIDs();
+  document.getElementById("count").innerText=uids.length;
+  const c=document.getElementById("uidContainer"); c.innerHTML="";
+  if(uids.length===0){ c.innerHTML="<div style='color:#6b7280;text-align:center'>Chưa có UID local - dùng 5 UID mặc định testnet</div>"; return; }
+  uids.forEach((it,i)=>{ c.innerHTML+=`<div class="uid-item"><span>#${i+1} ${it.username||it.uid.slice(0,8)}...</span><span>Đã Lưu</span></div>`; });
+}
+async function authenticateUser(){
+  log("⏳ Pi.authenticate testnet...");
+  try{
+    const scopes=['username','payments','wallet_address'];
+    const auth=await Pi.authenticate(scopes, (p)=>{ log("⚠ incomplete: "+p.identifier); });
+    log("🎉 UID: "+auth.user.uid);
+    let uids=getStoredUIDs();
+    if(!uids.some(u=>u.uid===auth.user.uid)){
+      uids.push({uid:auth.user.uid,username:auth.user.username});
+      localStorage.setItem("spa_uids",JSON.stringify(uids)); renderUIDs();
     }
-    async function authenticateUser(){
-        log("⏳ Pi.authenticate()...");
-        try{
-            const scopes=['username','payments','wallet_address'];
-            function onIncompletePaymentFound(p){ log("⚠ Bỏ qua GD dở: "+p.identifier); }
-            const auth=await Pi.authenticate(scopes,onIncompletePaymentFound);
-            log("🎉 UID: "+auth.user.uid);
-            let uids=getStoredUIDs();
-            if(!uids.some(u=>u.uid===auth.user.uid)){
-                uids.push({uid:auth.user.uid,username:auth.user.username,accessToken:auth.accessToken});
-                localStorage.setItem("spa_uids",JSON.stringify(uids)); renderUIDs(); log("✅ Đã lưu");
-            }else log("ℹ Đã tồn tại");
-        }catch(err){ log("❌ Auth: "+(err.message||JSON.stringify(err))); }
-    }
-    async function triggerA2UPayment(){
-        log("🚀 Gửi lệnh Pay A2U sang /api/pay5uid...");
-        try{
-            const stored=getStoredUIDs();
-            const uidsToSend=stored.length>0?stored.map(u=>u.uid):[];
-            const res=await fetch("/api/pay5uid",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({amount:1,uids:uidsToSend.length>0?uidsToSend:undefined})});
-            const data=await res.json();
-            if(data.success){ log("🎉 5/5 THÀNH CÔNG! total="+data.total); }
-            else{ log("⚠ 207 - có kẹt: "+JSON.stringify(data.results||data).slice(0,500)); }
-            console.log(data);
-        }catch(e){ log("❌ Backend: "+e.message); }
-    }
-    function copyUIDs(){ const u=JSON.stringify(getStoredUIDs().map(x=>x.uid),null,2); navigator.clipboard.writeText(u); alert("Đã copy"); }
-    function clearUIDs(){ if(confirm("Xóa?")){ localStorage.removeItem("spa_uids"); renderUIDs(); log("🗑 Đã xóa"); } }
-    renderUIDs();
+  }catch(err){ log("❌ Auth: "+(err.message||JSON.stringify(err))); }
+}
+async function triggerA2UPayment(){
+  log("🚀 POST /api/pay5uid -> testnet.minepi.com");
+  try{
+    const stored=getStoredUIDs();
+    const uidsToSend=stored.length>0?stored.map(u=>u.uid):[];
+    const res=await fetch("/api/pay5uid",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({amount:1,uids:uidsToSend.length>0?uidsToSend:undefined})});
+    const data=await res.json();
+    log(data.success?`🎉 ${data.total}/5 THÀNH CÔNG testnet`:`⚠ ${JSON.stringify(data.results).slice(0,400)}`);
+    console.log(data);
+  }catch(e){ log("❌ Backend: "+e.message); }
+}
+function copyUIDs(){ navigator.clipboard.writeText(JSON.stringify(getStoredUIDs().map(x=>x.uid),null,2)); }
+function clearUIDs(){ if(confirm("Xóa?")){ localStorage.removeItem("spa_uids"); renderUIDs(); } }
+renderUIDs();
 </script>
 </body>
 </html>
