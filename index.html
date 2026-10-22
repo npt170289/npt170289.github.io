@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spa Khải Hoàn - Thu Thập 5 UIDs Hợp Lệ</title>
+    <title>Spa Khải Hoàn - Collect UIDs</title>
     <!-- SDK Pi Network Chính Thức -->
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
     <style>
@@ -27,14 +27,14 @@
 <body>
 
 <div class="container">
-    <h2> Spa Khải Hoàn - Collect UIDs</h2>
-    <p>Mở trang này bằng <b>Pi Browser</b> trên 5 điện thoại khác nhau và bấm nút màu xanh dưới đây để ghi nhận UID hợp lệ[cite: 5].</p>
+    <h2>Spa Khải Hoàn - Collect UIDs</h2>
+    <p>Mở trang này bằng <b>Pi Browser</b> qua cổng Developer Portal / Sandbox để lấy UID chuẩn!</p>
 
-    <!-- Nút 1: Kích hoạt Sandbox nếu mở qua Browser thường -->
-    <button class="btn btn-auth" onclick="initSandboxMode()" style="background:#8b5cf6;">1. Kích hoạt Sandbox Mode (Nếu cần)[cite: 5]</button>
+    <!-- Nút 1: Khởi tạo Sandbox Mode -->
+    <button class="btn btn-auth" onclick="initSandboxMode()" style="background:#8b5cf6;">1. Kích hoạt Sandbox Mode (Nếu mở link thuần)</button>
 
     <!-- Nút 2: Cấp quyền tài khoản -->
-    <button class="btn btn-auth" onclick="authenticateUser()">2. Bấm Cấp Quyền Ví Tài Khoản Này[cite: 1, 5]</button>
+    <button class="btn btn-auth" onclick="authenticateUser()">2. Bấm Cấp Quyền Ví Tài Khoản Này</button>
 
     <div class="uid-list">
         <strong>📋 Danh sách UIDs đã thu thập (<span id="count">0</span>/5):</strong>
@@ -48,9 +48,9 @@
 </div>
 
 <script>
-    // 1. Khởi tạo Pi SDK chính thức
+    // Khởi tạo SDK
     try {
-        Pi.init({ version: "2.0", sandbox: true }); // Bật sandbox nếu testnet[cite: 5]
+        Pi.init({ version: "2.0", sandbox: true });
         log("✅ Pi SDK loaded thành công!");
     } catch(e) {
         log("❌ Lỗi load SDK: " + e.message);
@@ -62,7 +62,6 @@
         logBox.scrollTop = logBox.scrollHeight;
     }
 
-    // Lấy UIDs lưu sẵn từ localStorage
     function getStoredUIDs() {
         return JSON.parse(localStorage.getItem("spa_uids") || "[]");
     }
@@ -88,10 +87,9 @@
         });
     }
 
-    // 2. Kích hoạt Sandbox qua mã thủ công
     function initSandboxMode() {
         try {
-            const flag = prompt("Nhập flag Sandbox từ Developer Portal (Nếu chạy sandbox.minepi.com)[cite: 5]:");
+            const flag = prompt("Nhập mã Sandbox Flag từ Developer Portal (Bấm nút 'Run in Sandbox' để lấy mã):");
             if(flag) {
                 localStorage.setItem("pi_sandbox", flag);
                 log("🔄 Đã lưu Sandbox Flag. Đang tải lại trang...");
@@ -101,3 +99,62 @@
             log("❌ Lỗi Sandbox: " + e.message);
         }
     }
+
+    async function authenticateUser() {
+        log("⏳ Đang gọi Pi.authenticate()...");
+        try {
+            const scopes = ['username', 'payments'];
+            
+            function onIncompletePaymentFound(payment) {
+                log("⚠️ Bỏ qua giao dịch dở dang: " + payment.identifier);
+            }
+
+            const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
+            
+            log("🎉 THÀNH CÔNG! Mã UID:");
+            log(auth.user.uid);
+
+            let uids = getStoredUIDs();
+            const exists = uids.some(u => u.uid === auth.user.uid);
+
+            if(!exists) {
+                if(uids.length >= 5) {
+                    alert("Đã đủ 5 UID!");
+                    return;
+                }
+                uids.push({ uid: auth.user.uid, username: auth.user.username, accessToken: auth.accessToken });
+                localStorage.setItem("spa_uids", JSON.stringify(uids));
+                renderUIDs();
+                log("✅ Đã lưu UID này vào danh sách!");
+            } else {
+                log("ℹ️ UID này đã có trong danh sách.");
+            }
+
+        } catch(err) {
+            log("❌ Lỗi Authenticate: " + (err.message || JSON.stringify(err)));
+        }
+    }
+
+    function copyUIDs() {
+        const uids = getStoredUIDs();
+        if(uids.length === 0) {
+            alert("Chưa có UID nào!");
+            return;
+        }
+        navigator.clipboard.writeText(JSON.stringify(uids, null, 2));
+        alert("Đã copy danh sách UIDs!");
+    }
+
+    function clearUIDs() {
+        if(confirm("Xóa danh sách?")) {
+            localStorage.removeItem("spa_uids");
+            renderUIDs();
+            log("🗑️ Đã xóa danh sách.");
+        }
+    }
+
+    renderUIDs();
+</script>
+
+</body>
+</html>
