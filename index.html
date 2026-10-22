@@ -101,12 +101,13 @@ async function authenticateUser(){
 }
 
 async function triggerA2UPayment(){
-  log("🚀 POST /api/pay5uid -> minepi.com");
+  log("🚀 POST -> Vercel Backend...");
   try{
     const stored = getStoredUIDs();
     const uidsToSend = stored.length > 0 ? stored.map(u => u.uid) : [];
     
-    const res = await fetch("/api/pay5uid",{
+    // TRỎ THẲNG ĐƯỜNG DẪN TUYỆT ĐỐI SANG VERCEL ĐỂ KHẮC PHỤC LỖI 404 HTML
+    const res = await fetch("https://spakhaihoan.vercel.app/api/pay5uid", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
