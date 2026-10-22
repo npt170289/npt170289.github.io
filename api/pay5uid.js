@@ -1,10 +1,26 @@
 export default async function handler(req, res) {
+  // CORS Headers bảo vệ kết nối từ GitHub Pages sang Vercel
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  );
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ success: false, error: "Method Not Allowed" });
   }
+
   const PI_API_KEY = process.env.PI_API_KEY;
-  if (!PI_API_KEY) return res.status(500).json({ success: false, error: "Missing PI_API_KEY" });
+  if (!PI_API_KEY) {
+    return res.status(500).json({ success: false, error: "Missing PI_API_KEY" });
+  }
 
   const body = req.body || {};
   let targetList = [];
@@ -14,6 +30,7 @@ export default async function handler(req, res) {
     targetList = [body.uid.trim()];
   }
 
+  // 5 UID CHÍNH THỨC CỦA SPA KHẢI HOÀN
   const DEFAULT_5UIDS = [
     "cad0a30e-eda3-46b3-a30c-ce71ee898db9",
     "d434faf1-51ab-48ae-9b2f-e48ea4f699aa",
@@ -21,12 +38,12 @@ export default async function handler(req, res) {
     "6d7867e6-9abb-4f76-9cb4-85e146eee486",
     "f27c937e-a7ae-4bf6-9455-9c7af9d3428f"
   ];
+  
   if (targetList.length === 0) targetList = DEFAULT_5UIDS;
   const amount = Number(body.amount) || 1;
 
   async function piFetch(path, method = "GET", payload) {
-    // CHUẨN TESTNET 100%
-    const r = await fetch(`https://api.testnet.minepi.com${path}`, {
+    const r = await fetch(`https://api.minepi.com${path}`, {
       method,
       headers: {
         Authorization: `Key ${PI_API_KEY}`,
@@ -44,39 +61,49 @@ export default async function handler(req, res) {
   async function cancelOngoingIfFound(piErrorData) {
     try {
       let paymentId = null;
-      if (piErrorData?.payment?.identifier) paymentId = piErrorData.payment.identifier;
-      if (!paymentId && piErrorData?.identifier) paymentId = piErrorData.identifier;
-      if (!paymentId && piErrorData?.ongoing_payment?.identifier) paymentId = piErrorData.ongoing_payment.identifier;
+      if (piErrorData && piErrorData.payment && piErrorData.payment.identifier) paymentId = piErrorData.payment.identifier;
+      if (!paymentId && piErrorData && piErrorData.identifier) paymentId = piErrorData.identifier;
+      if (!paymentId && piErrorData && piErrorData.ongoing_payment && piErrorData.ongoing_payment.identifier) paymentId = piErrorData.ongoing_payment.identifier;
+      
       if (!paymentId) {
         const inc = await piFetch("/v2/payments/incomplete", "GET");
         const list = inc.data?.incomplete_payments || inc.data || [];
-        if (Array.isArray(list) && list.length > 0) paymentId = list[0].identifier;
+        if (Array.isArray(list) && list.length > 0) {
+          paymentId = list[0].identifier;
+        }
       }
+
       if (paymentId) {
-        let result = await piFetch(`/v2/payments/${paymentId}/complete`, "POST", { txid: "a2u_retry_complete" });
-        if (!result.ok) result = await piFetch(`/v2/payments/${paymentId}/cancel`, "POST");
-        return { cancelled: result.ok, paymentId };
+        let result = await piFetch(`/v2/payments/${paymentId}/complete`, "POST", { txid: "spakhaihoan_retry_complete" });
+        if (!result.ok) {
+          result = await piFetch(`/v2/payments/${paymentId}/cancel`, "POST");
+        }
+        return { cancelled: result.ok, paymentId, result: result.data };
       }
     } catch (e) {}
     return { cancelled: false };
   }
 
   const results = [];
+
   for (let i = 0; i < targetList.length; i++) {
     const uid = targetList[i];
     let attempt = 0;
     let finalResult = null;
+
     while (attempt < 3) {
       attempt++;
       const piPayload = {
         payment: {
           amount,
-          memo: `Spa Khai Hoan Testnet A2U @${uid.substring(0,6)} ${i+1}/${targetList.length}`,
+          memo: `Spa Khai Hoan Testnet A2U @${uid.substring(0,6)} - ${i+1}/${targetList.length}`,
           metadata: { target_uid: uid, batch_index: i, attempt, app: "spakhaihoan", env: "testnet" },
           uid,
         },
       };
+
       const piResponse = await piFetch("/v2/payments", "POST", piPayload);
+
       if (piResponse.ok) {
         finalResult = { uid, success: true, pi_response: piResponse.data, attempts: attempt };
         break;
@@ -84,22 +111,37 @@ export default async function handler(req, res) {
         const errStr = JSON.stringify(piResponse.data).toLowerCase();
         if (errStr.includes("ongoing_payment_found") || errStr.includes("ongoing payment")) {
           const cancelRes = await cancelOngoingIfFound(piResponse.data);
-          if (cancelRes.cancelled) { finalResult = { retrying: true }; continue; }
-          else { finalResult = { uid, success: false, error: "ongoing_payment_found", details: piResponse.data, status: piResponse.status }; break; }
+          if (cancelRes.cancelled) {
+            finalResult = { uid, success: false, retrying: true, cancelled_old: cancelRes.paymentId };
+            continue;
+          } else {
+            finalResult = { uid, success: false, error: "ongoing_payment_found but cannot cancel", details: piResponse.data, status: piResponse.status };
+            break;
+          }
         } else {
           finalResult = { uid, success: false, error: "Pi API rejected", details: piResponse.data, status: piResponse.status, attempts: attempt };
           break;
         }
       }
     }
-    if (finalResult?.retrying) {
-      const lastPayload = { payment: { amount, memo: `Spa Khai Hoan Retry ${uid}`, metadata: { target_uid: uid }, uid } };
+
+    if (finalResult && finalResult.retrying) {
+      const lastPayload = {
+        payment: { amount, memo: `Spa Khai Hoan Retry ${uid}`, metadata: { target_uid: uid }, uid }
+      };
       const lastResp = await piFetch("/v2/payments", "POST", lastPayload);
       finalResult = lastResp.ok ? { uid, success: true, pi_response: lastResp.data } : { uid, success: false, error: "Failed after cancel", details: lastResp.data };
     }
+
     results.push(finalResult);
     if (i < targetList.length - 1) await new Promise(r => setTimeout(r, 800));
   }
+
   const allOk = results.every(r => r.success);
-  return res.status(allOk ? 200 : 207).json({ success: allOk, total: results.length, results, note: "spakhaihoan testnet 100% - api.testnet.minepi.com + auto cancel" });
+  return res.status(allOk ? 200 : 207).json({
+    success: allOk,
+    total: results.length,
+    results,
+    note: "Spa Khai Hoan Testnet A2U Batch Payment Success"
+  });
 }
