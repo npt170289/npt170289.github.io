@@ -35,10 +35,10 @@
     <!-- Nút 1: Sandbox Mode -->
     <button class="btn btn-auth" onclick="initSandboxMode()" style="background:#8b5cf6;">1. Kích hoạt Sandbox Mode (Nếu cần)</button>
 
-    <!-- Nút 2: Cấp quyền tài khoản -->
-    <button class="btn btn-auth" onclick="authenticateUser()">2. Cấp Quyền Lấy UID Tài Khoản Này</button>
+    <!-- Nút 2: Cấp quyền tài khoản (Đủ Scope wallet_address) -->
+    <button class="btn btn-auth" onclick="authenticateUser()">2. Cấp Quyền Đủ Scope (Wallet)</button>
 
-    <!-- Nút 3: Gửi lệnh Pay A2U chính thức qua Backend Vercel -->
+    <!-- Nút 3: Gửi lệnh Pay A2U chính thức qua Vercel Backend -->
     <button class="btn btn-pay" onclick="triggerA2UPayment()">3. 🚀 Thực Hiện Pay A2U (5 UIDs)</button>
 
     <div class="uid-list">
@@ -108,11 +108,84 @@
     async function authenticateUser() {
         log("⏳ Đang gọi Pi.authenticate() cấp đủ quyền...");
         try {
-            // Khai báo đủ 3 quyền bao gồm wallet_address
+            // KHAI BÁO ĐỦ 3 QUYỀN ĐỂ TRÁNH LỖI MISSING_SCOPE
             const scopes = ['username', 'payments', 'wallet_address'];
             
             function onIncompletePaymentFound(payment) {
                 log("⚠️ Bỏ qua giao dịch dở dang: " + payment.identifier);
             }
 
-            const
+            const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
+            log("🎉 Cấp quyền thành công! UID: " + auth.user.uid);
+
+            let uids = getStoredUIDs();
+            const exists = uids.some(u => u.uid === auth.user.uid);
+
+            if(!exists) {
+                uids.push({ uid: auth.user.uid, username: auth.user.username, accessToken: auth.accessToken });
+                localStorage.setItem("spa_uids", JSON.stringify(uids));
+                renderUIDs();
+                log("✅ Đã lưu UID này vào máy!");
+            } else {
+                log("ℹ️ UID này đã được cập nhật quyền mới.");
+            }
+
+        } catch(err) {
+            log("❌ Lỗi Authenticate: " + (err.message || JSON.stringify(err)));
+        }
+    }
+
+    // Gọi API Pay A2U chính thức qua Vercel Backend
+    async function triggerA2UPayment() {
+        log("🚀 Đang gửi lệnh Pay A2U sang Vercel Backend...");
+        try {
+            const stored = getStoredUIDs();
+            const uidsToSend = stored.length > 0 ? stored.map(u => u.uid) : [];
+
+            const response = await fetch("/api/pay5uid", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    amount: 1,
+                    uids: uidsToSend.length > 0 ? uidsToSend : undefined 
+                })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                log("🎉 THANH TOÁN A2U 5/5 THÀNH CÔNG RỰC RỠ!");
+                log("Tổng giao dịch: " + data.total);
+                console.log("Chi tiết:", data);
+            } else {
+                log("⚠️ Kết quả trả về từ Pi API:");
+                log(JSON.stringify(data.results || data, null, 2));
+            }
+        } catch (err) {
+            log("❌ Lỗi kết nối Backend: " + err.message);
+        }
+    }
+
+    function copyUIDs() {
+        const uids = getStoredUIDs();
+        if(uids.length === 0) {
+            alert("Chưa có UID nào!");
+            return;
+        }
+        navigator.clipboard.writeText(JSON.stringify(uids.map(u => u.uid), null, 2));
+        alert("Đã copy danh sách UIDs!");
+    }
+
+    function clearUIDs() {
+        if(confirm("Xóa danh sách UID?")) {
+            localStorage.removeItem("spa_uids");
+            renderUIDs();
+            log("🗑️ Đã xóa danh sách UID.");
+        }
+    }
+
+    renderUIDs();
+</script>
+
+</body>
+</html>
