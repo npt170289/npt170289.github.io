@@ -26,7 +26,7 @@ p{font-size:13px;color:#9ca3af;text-align:center;margin:0 0 12px}
 <div class="container">
 <h2>Spa Khải Hoàn</h2>
 <p>A2U Payment - TESTNET 100%</p>
-<span class="badge">ENV: api.testnet.minepi.com | Pi.init sandbox:true</span>
+<span class="badge">ENV: api.minepi.com | Pi.init sandbox:true</span>
 <button class="btn btn-auth" onclick="authenticateUser()">Cấp Quyền Đủ Scope (Wallet)</button>
 <button class="btn btn-pay" onclick="triggerA2UPayment()">🚀 Pay A2U Testnet (5 UIDs)</button>
 <div class="uid-list">
@@ -45,44 +45,101 @@ f27c937e-a7ae-4bf6-9455-9c7af9d3428f<br>
 <button class="btn btn-clear" onclick="clearUIDs()">Xóa</button>
 <div id="log">Testnet ready...</div>
 </div>
+
 <script>
-// TESTNET CHUẨN
-try{ Pi.init({ version:"2.0", sandbox:true }); log("✅ Pi SDK sandbox:true - testnet"); }catch(e){ log("❌ SDK: "+e.message); }
-function log(m){ const b=document.getElementById("log"); b.innerHTML+="<div>> "+m+"</div>"; b.scrollTop=b.scrollHeight; }
-function getStoredUIDs(){ return JSON.parse(localStorage.getItem("spa_uids")||"[]"); }
-function renderUIDs(){
-  const uids=getStoredUIDs();
-  document.getElementById("count").innerText=uids.length;
-  const c=document.getElementById("uidContainer"); c.innerHTML="";
-  if(uids.length===0){ c.innerHTML="<div style='color:#6b7280;text-align:center'>Chưa có UID local - dùng 5 UID mặc định testnet</div>"; return; }
-  uids.forEach((it,i)=>{ c.innerHTML+=`<div class="uid-item"><span>#${i+1} ${it.username||it.uid.slice(0,8)}...</span><span>Đã Lưu</span></div>`; });
+try{ 
+    Pi.init({ version:"2.0", sandbox:true }); 
+    log("✅ Pi SDK sandbox:true - testnet"); 
+}catch(e){ 
+    log("❌ SDK: "+e.message); 
 }
+
+function log(m){ 
+    const b=document.getElementById("log"); 
+    b.innerHTML+="<div>> "+m+"</div>"; 
+    b.scrollTop=b.scrollHeight; 
+}
+
+function getStoredUIDs(){ 
+    return JSON.parse(localStorage.getItem("spa_uids")||"[]"); 
+}
+
+function renderUIDs(){
+  const uids = getStoredUIDs();
+  const countEl = document.getElementById("count");
+  if(countEl) countEl.innerText = uids.length;
+  
+  const c = document.getElementById("uidContainer");
+  if(!c) return;
+  c.innerHTML="";
+  
+  if(uids.length === 0){ 
+      c.innerHTML="<div style='color:#6b7280;text-align:center'>Chưa có UID local - dùng 5 UID mặc định testnet</div>"; 
+      return; 
+  }
+  uids.forEach((it,i)=>{ 
+      c.innerHTML += `<div class="uid-item"><span>#${i+1} ${it.username||it.uid.slice(0,8)}...</span><span>Đã Lưu</span></div>`; 
+  });
+}
+
 async function authenticateUser(){
   log("⏳ Pi.authenticate testnet...");
   try{
-    const scopes=['username','payments','wallet_address'];
-    const auth=await Pi.authenticate(scopes, (p)=>{ log("⚠ incomplete: "+p.identifier); });
+    // Đủ scope để tránh lỗi missing_scope
+    const scopes = ['username','payments','wallet_address'];
+    const auth = await Pi.authenticate(scopes, (p)=>{ log("⚠ incomplete: "+p.identifier); });
     log("🎉 UID: "+auth.user.uid);
-    let uids=getStoredUIDs();
+    let uids = getStoredUIDs();
     if(!uids.some(u=>u.uid===auth.user.uid)){
-      uids.push({uid:auth.user.uid,username:auth.user.username});
-      localStorage.setItem("spa_uids",JSON.stringify(uids)); renderUIDs();
+      uids.push({uid:auth.user.uid, username:auth.user.username});
+      localStorage.setItem("spa_uids", JSON.stringify(uids)); 
+      renderUIDs();
     }
-  }catch(err){ log("❌ Auth: "+(err.message||JSON.stringify(err))); }
+  }catch(err){ 
+    log("❌ Auth: "+(err.message||JSON.stringify(err))); 
+  }
 }
+
 async function triggerA2UPayment(){
-  log("🚀 POST /api/pay5uid -> testnet.minepi.com");
+  log("🚀 POST /api/pay5uid -> minepi.com");
   try{
-    const stored=getStoredUIDs();
-    const uidsToSend=stored.length>0?stored.map(u=>u.uid):[];
-    const res=await fetch("/api/pay5uid",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({amount:1,uids:uidsToSend.length>0?uidsToSend:undefined})});
-    const data=await res.json();
-    log(data.success?`🎉 ${data.total}/5 THÀNH CÔNG testnet`:`⚠ ${JSON.stringify(data.results).slice(0,400)}`);
+    const stored = getStoredUIDs();
+    const uidsToSend = stored.length > 0 ? stored.map(u => u.uid) : [];
+    
+    const res = await fetch("/api/pay5uid",{
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            amount: 1,
+            uids: uidsToSend.length > 0 ? uidsToSend : undefined
+        })
+    });
+    
+    const data = await res.json();
+    if(data.success){
+        log(`🎉 ${data.total}/5 THÀNH CÔNG testnet`);
+    } else {
+        log(`⚠ ${JSON.stringify(data.results || data).slice(0,400)}`);
+    }
     console.log(data);
-  }catch(e){ log("❌ Backend: "+e.message); }
+  }catch(e){ 
+    log("❌ Backend: "+e.message); 
+  }
 }
-function copyUIDs(){ navigator.clipboard.writeText(JSON.stringify(getStoredUIDs().map(x=>x.uid),null,2)); }
-function clearUIDs(){ if(confirm("Xóa?")){ localStorage.removeItem("spa_uids"); renderUIDs(); } }
+
+function copyUIDs(){ 
+    navigator.clipboard.writeText(JSON.stringify(getStoredUIDs().map(x=>x.uid),null,2)); 
+    alert("Đã copy UIDs!");
+}
+
+function clearUIDs(){ 
+    if(confirm("Xóa?")){ 
+        localStorage.removeItem("spa_uids"); 
+        renderUIDs(); 
+        log("🗑️ Đã xóa local UIDs.");
+    } 
+}
+
 renderUIDs();
 </script>
 </body>
