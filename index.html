@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spa Khải Hoàn - Testnet A2U</title>
+<title>Spa Khải Hoàn - Testnet A2U Secure</title>
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <style>
 *{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}
@@ -19,16 +19,16 @@ p{font-size:13px;color:#9ca3af;text-align:center;margin:0 0 12px}
 .btn-clear{background:#ef4444;color:#fff;margin-top:5px}
 .uid-list{background:#030712;border:1px solid #00ff88;border-radius:10px;padding:12px;margin-top:15px;font-size:12px}
 .uid-item{background:#1f2937;padding:8px 12px;border-radius:6px;margin-bottom:6px;word-break:break-all;display:flex;justify-content:space-between}
-#log{background:#000;color:#00ff88;padding:10px;border-radius:8px;font-size:11px;font-family:monospace;height:160px;overflow-y:auto;margin-top:15px}
+#log{background:#000;color:#00ff88;padding:10px;border-radius:8px;font-size:11px;font-family:monospace;height:180px;overflow-y:auto;margin-top:15px;white-space:pre-wrap}
 </style>
 </head>
 <body>
 <div class="container">
 <h2>Spa Khải Hoàn</h2>
-<p>A2U Payment - TESTNET 100%</p>
-<span class="badge">ENV: api.minepi.com | Pi.init sandbox:true</span>
-<button class="btn btn-auth" onclick="authenticateUser()">Cấp Quyền Đủ Scope (Wallet)</button>
-<button class="btn btn-pay" onclick="triggerA2UPayment()">🚀 Pay A2U Testnet (5 UIDs)</button>
+<p>A2U Payment - TESTNET SECURE 100%</p>
+<span class="badge">SECURE: Chinh chu only | api.minepi.com</span>
+<button class="btn btn-auth" onclick="authenticateUser()">1. Cấp Quyền Đủ Scope (Wallet)</button>
+<button class="btn btn-pay" onclick="triggerA2UPayment()">2. 🚀 Pay A2U Testnet (Chính chủ only)</button>
 <div class="uid-list">
 <strong>DEFAULT 5 UID spakhaihoan:</strong>
 <div style="margin-top:8px;color:#9ca3af;font-size:11px;line-height:16px">
@@ -39,108 +39,99 @@ e0c9e631-a143-467e-866e-fbd77e283816<br>
 f27c937e-a7ae-4bf6-9455-9c7af9d3428f<br>
 </div>
 <div id="uidContainer" style="margin-top:10px"></div>
-<div style="margin-top:6px">Local: <span id="count">0</span> UID</div>
+<div style="margin-top:6px">Local: <span id="count">0</span> UID | Chính chủ: <span id="adminUid">Chưa cấp quyền</span></div>
 </div>
 <button class="btn btn-copy" onclick="copyUIDs()">Copy UIDs</button>
-<button class="btn btn-clear" onclick="clearUIDs()">Xóa</button>
-<div id="log">Testnet ready...</div>
+<button class="btn btn-clear" onclick="clearUIDs()">Xóa Local</button>
+<div id="log">Secure ready - Chi chinh chu moi pay duoc...</div>
 </div>
-
 <script>
 try{ 
     Pi.init({ version:"2.0", sandbox:true }); 
-    log("✅ Pi SDK sandbox:true - testnet"); 
+    log("✅ Pi SDK sandbox:true - Secure Mode"); 
 }catch(e){ 
     log("❌ SDK: "+e.message); 
 }
-
 function log(m){ 
     const b=document.getElementById("log"); 
-    b.innerHTML+="<div>> "+m+"</div>"; 
+    const time = new Date().toLocaleTimeString();
+    b.innerHTML+="<div>["+time+"] "+m+"</div>"; 
     b.scrollTop=b.scrollHeight; 
 }
-
-function getStoredUIDs(){ 
-    return JSON.parse(localStorage.getItem("spa_uids")||"[]"); 
-}
-
+function getStoredUIDs(){ return JSON.parse(localStorage.getItem("spa_uids")||"[]"); }
 function renderUIDs(){
   const uids = getStoredUIDs();
-  const countEl = document.getElementById("count");
-  if(countEl) countEl.innerText = uids.length;
-  
+  document.getElementById("count").innerText = uids.length;
+  const adminUid = localStorage.getItem("pi_adminUid");
+  if(adminUid) document.getElementById("adminUid").innerText = adminUid.slice(0,8)+"...";
   const c = document.getElementById("uidContainer");
-  if(!c) return;
   c.innerHTML="";
-  
   if(uids.length === 0){ 
-      c.innerHTML="<div style='color:#6b7280;text-align:center'>Chưa có UID local - dùng 5 UID mặc định testnet</div>"; 
+      c.innerHTML="<div style='color:#6b7280;text-align:center'>Chưa có UID local - dùng 5 UID mặc định</div>"; 
       return; 
   }
   uids.forEach((it,i)=>{ 
       c.innerHTML += `<div class="uid-item"><span>#${i+1} ${it.username||it.uid.slice(0,8)}...</span><span>Đã Lưu</span></div>`; 
   });
 }
-
 async function authenticateUser(){
-  log("⏳ Pi.authenticate testnet...");
+  log("⏳ Pi.authenticate...");
   try{
-    // Đủ scope để tránh lỗi missing_scope
     const scopes = ['username','payments','wallet_address'];
     const auth = await Pi.authenticate(scopes, (p)=>{ log("⚠ incomplete: "+p.identifier); });
     log("🎉 UID: "+auth.user.uid);
+    // LUU QUAN TRONG CHO CHECK CHINH CHU
+    localStorage.setItem("pi_accessToken", auth.accessToken);
+    localStorage.setItem("pi_adminUid", auth.user.uid);
     let uids = getStoredUIDs();
     if(!uids.some(u=>u.uid===auth.user.uid)){
       uids.push({uid:auth.user.uid, username:auth.user.username});
       localStorage.setItem("spa_uids", JSON.stringify(uids)); 
-      renderUIDs();
     }
+    renderUIDs();
+    log("✅ Da luu accessToken - Bay gio chi chinh chu moi pay duoc");
   }catch(err){ 
     log("❌ Auth: "+(err.message||JSON.stringify(err))); 
   }
 }
-
 async function triggerA2UPayment(){
-  log("🚀 POST -> Vercel Backend...");
+  const accessToken = localStorage.getItem("pi_accessToken");
+  if(!accessToken){
+    log("❌ CHUA CAP QUYEN! Bam nut 1 truoc");
+    alert("Chưa cấp quyền! Bấm nút Cấp Quyền trước bro!");
+    return;
+  }
+  log("🚀 POST -> Vercel Backend (chinh chu check)...");
   try{
     const stored = getStoredUIDs();
-    const uidsToSend = stored.length > 0 ? stored.map(u => u.uid) : [];
-    
-    // TRỎ THẲNG ĐƯỜNG DẪN TUYỆT ĐỐI SANG VERCEL ĐỂ KHẮC PHỤC LỖI 404 HTML
+    const uidsToSend = stored.length > 0 ? stored.map(u => u.uid) : undefined;
     const res = await fetch("https://spakhaihoan.vercel.app/api/pay5uid", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
             amount: 1,
-            uids: uidsToSend.length > 0 ? uidsToSend : undefined
+            uids: uidsToSend,
+            accessToken: accessToken
         })
     });
-    
     const data = await res.json();
+    if(res.status === 403){
+      log(`🚫 403 FORBIDDEN: ${data.error}`);
+      alert("KHONG PHAI CHINH CHU! Chi chu quan Spa moi duoc pay");
+      return;
+    }
     if(data.success){
-        log(`🎉 ${data.total}/5 THÀNH CÔNG testnet`);
+        log(`🎉 ${data.total}/5 THANH CONG - Chinh chu xac nhan`);
     } else {
-        log(`⚠ ${JSON.stringify(data.results || data).slice(0,400)}`);
+        log(`⚠ Ket qua: ${JSON.stringify(data.results || data).slice(0,500)}`);
     }
     console.log(data);
   }catch(e){ 
     log("❌ Backend: "+e.message); 
   }
 }
-
-function copyUIDs(){ 
-    navigator.clipboard.writeText(JSON.stringify(getStoredUIDs().map(x=>x.uid),null,2)); 
-    alert("Đã copy UIDs!");
-}
-
-function clearUIDs(){ 
-    if(confirm("Xóa?")){ 
-        localStorage.removeItem("spa_uids"); 
-        renderUIDs(); 
-        log("🗑️ Đã xóa local UIDs.");
-    } 
-}
-
+function copyUIDs(){ navigator.clipboard.writeText(JSON.stringify(getStoredUIDs().map(x=>x.uid),null,2)); alert("Đã copy UIDs!"); }
+function clearUIDs(){ if(confirm("Xóa local?")){ localStorage.removeItem("spa_uids"); localStorage.removeItem("pi_accessToken"); localStorage.removeItem("pi_adminUid"); renderUIDs(); log("🗑 Đã xóa."); } }
 renderUIDs();
 </script>
 </body>
