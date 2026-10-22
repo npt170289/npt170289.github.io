@@ -4,188 +4,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spa Khải Hoàn - Official A2U Payment</title>
-    <!-- SDK Pi Network Chính Thức -->
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
     <style>
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background: #0f0f19; color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { background: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 20px; max-width: 450px; width: 100%; }
-        h2 { text-align: center; color: #f59e0b; margin-top: 0; }
-        p { font-size: 13px; color: #9ca3af; text-align: center; }
-        .btn { width: 100%; padding: 14px; margin-top: 10px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-auth { background: #10b981; color: white; }
-        .btn-auth:hover { background: #059669; }
-        .btn-pay { background: #f59e0b; color: white; }
-        .btn-pay:hover { background: #d97706; }
-        .btn-copy { background: #3b82f6; color: white; }
-        .btn-clear { background: #ef4444; color: white; margin-top: 5px; }
-        .uid-list { background: #030712; border: 1px solid #00ff88; border-radius: 10px; padding: 12px; margin-top: 15px; font-size: 12px; }
-        .uid-item { background: #1f2937; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; word-break: break-all; display: flex; justify-content: space-between; align-items: center; }
-        .status { font-weight: bold; padding: 2px 6px; border-radius: 4px; font-size: 10px; }
-        .status-ok { background: #065f46; color: #34d399; }
-        #log { background: #000; color: #00ff88; padding: 10px; border-radius: 8px; font-size: 11px; font-family: monospace; height: 160px; overflow-y: auto; margin-top: 15px; }
+        *{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+        body{background:#0f0f19;color:#fff;margin:0;padding:20px;display:flex;justify-content:center}
+        .container{background:#111827;border:1px solid #1f2937;border-radius:16px;padding:20px;max-width:450px;width:100%}
+        h2{text-align:center;color:#f59e0b;margin-top:0}
+        p{font-size:13px;color:#9ca3af;text-align:center}
+        .btn{width:100%;padding:14px;margin-top:10px;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
+        .btn-auth{background:#10b981;color:#fff}
+        .btn-pay{background:#f59e0b;color:#fff}
+        .btn-copy{background:#3b82f6;color:#fff}
+        .btn-clear{background:#ef4444;color:#fff;margin-top:5px}
+        .uid-list{background:#030712;border:1px solid #00ff88;border-radius:10px;padding:12px;margin-top:15px;font-size:12px}
+        .uid-item{background:#1f2937;padding:8px 12px;border-radius:6px;margin-bottom:6px;word-break:break-all;display:flex;justify-content:space-between}
+        .status{font-weight:bold;padding:2px 6px;border-radius:4px;font-size:10px}
+        .status-ok{background:#065f46;color:#34d399}
+        #log{background:#000;color:#00ff88;padding:10px;border-radius:8px;font-size:11px;font-family:monospace;height:160px;overflow-y:auto;margin-top:15px}
     </style>
 </head>
 <body>
-
 <div class="container">
     <h2>Spa Khải Hoàn</h2>
-    <p>Hệ thống thanh toán A2U chuẩn Pi Network</p>
-
-    <!-- Nút 1: Sandbox Mode -->
-    <button class="btn btn-auth" onclick="initSandboxMode()" style="background:#8b5cf6;">1. Kích hoạt Sandbox Mode (Nếu cần)</button>
-
-    <!-- Nút 2: Cấp quyền tài khoản (Đủ Scope wallet_address) -->
+    <p>Hệ thống thanh toán A2U chuẩn Pi Network - KUVEP</p>
     <button class="btn btn-auth" onclick="authenticateUser()">2. Cấp Quyền Đủ Scope (Wallet)</button>
-
-    <!-- Nút 3: Gửi lệnh Pay A2U chính thức qua Vercel Backend -->
     <button class="btn btn-pay" onclick="triggerA2UPayment()">3. 🚀 Thực Hiện Pay A2U (5 UIDs)</button>
-
     <div class="uid-list">
-        <strong>📋 Danh sách UIDs trong máy (<span id="count">0</span>):</strong>
-        <div id="uidContainer" style="margin-top: 8px;"></div>
+        <strong>📋 Danh sách UIDs (<span id="count">0</span>):</strong>
+        <div id="uidContainer" style="margin-top:8px"></div>
+        <div style="margin-top:8px;color:#6b7280;font-size:11px">
+        DEFAULT 5 UID spakhaihoan:<br>
+        cad0a30e-eda3-46b3-a30c-ce71ee898db9<br>
+        d434faf1-51ab-48ae-9b2f-e48ea4f699aa<br>
+        e0c9e631-a143-467e-866e-fbd77e283816<br>
+        6d7867e6-9abb-4f76-9cb4-85e146eee486<br>
+        f27c937e-a7ae-4bf6-9455-9c7af9d3428f
+        </div>
     </div>
-
     <button class="btn btn-copy" onclick="copyUIDs()">Copy Danh Sách UIDs</button>
     <button class="btn btn-clear" onclick="clearUIDs()">Xóa Làm Lại</button>
-
-    <div id="log">Đang sẵn sàng kết nối Pi SDK...</div>
+    <div id="log">Sẵn sàng...</div>
 </div>
-
 <script>
-    // Khởi tạo Pi SDK
-    try {
-        Pi.init({ version: "2.0", sandbox: true });
-        log("✅ Pi SDK loaded thành công!");
-    } catch(e) {
-        log("❌ Lỗi load SDK: " + e.message);
+    try{ Pi.init({ version:"2.0", sandbox:true }); log("✅ Pi SDK loaded - sandbox:true cho test"); }catch(e){ log("❌ SDK: "+e.message); }
+    function log(m){ const b=document.getElementById("log"); b.innerHTML+="<div>> "+m+"</div>"; b.scrollTop=b.scrollHeight; }
+    function getStoredUIDs(){ return JSON.parse(localStorage.getItem("spa_uids")||"[]"); }
+    function renderUIDs(){
+        const uids=getStoredUIDs();
+        document.getElementById("count").innerText=uids.length;
+        const c=document.getElementById("uidContainer"); c.innerHTML="";
+        if(uids.length===0){ c.innerHTML="<div style='color:#6b7280;text-align:center'>Chưa có UID local - Backend sẽ dùng 5 UID mặc định spakhaihoan</div>"; return; }
+        uids.forEach((it,i)=>{ c.innerHTML+=`<div class="uid-item"><span><b>#${i+1}:</b> ${it.username||it.uid.slice(0,10)}...</span><span class="status status-ok">Đã Lưu</span></div>`; });
     }
-
-    function log(msg) {
-        const logBox = document.getElementById("log");
-        logBox.innerHTML += "<div>> " + msg + "</div>";
-        logBox.scrollTop = logBox.scrollHeight;
+    async function authenticateUser(){
+        log("⏳ Pi.authenticate()...");
+        try{
+            const scopes=['username','payments','wallet_address'];
+            function onIncompletePaymentFound(p){ log("⚠ Bỏ qua GD dở: "+p.identifier); }
+            const auth=await Pi.authenticate(scopes,onIncompletePaymentFound);
+            log("🎉 UID: "+auth.user.uid);
+            let uids=getStoredUIDs();
+            if(!uids.some(u=>u.uid===auth.user.uid)){
+                uids.push({uid:auth.user.uid,username:auth.user.username,accessToken:auth.accessToken});
+                localStorage.setItem("spa_uids",JSON.stringify(uids)); renderUIDs(); log("✅ Đã lưu");
+            }else log("ℹ Đã tồn tại");
+        }catch(err){ log("❌ Auth: "+(err.message||JSON.stringify(err))); }
     }
-
-    function getStoredUIDs() {
-        return JSON.parse(localStorage.getItem("spa_uids") || "[]");
+    async function triggerA2UPayment(){
+        log("🚀 Gửi lệnh Pay A2U sang /api/pay5uid...");
+        try{
+            const stored=getStoredUIDs();
+            const uidsToSend=stored.length>0?stored.map(u=>u.uid):[];
+            const res=await fetch("/api/pay5uid",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({amount:1,uids:uidsToSend.length>0?uidsToSend:undefined})});
+            const data=await res.json();
+            if(data.success){ log("🎉 5/5 THÀNH CÔNG! total="+data.total); }
+            else{ log("⚠ 207 - có kẹt: "+JSON.stringify(data.results||data).slice(0,500)); }
+            console.log(data);
+        }catch(e){ log("❌ Backend: "+e.message); }
     }
-
-    function renderUIDs() {
-        const uids = getStoredUIDs();
-        const container = document.getElementById("uidContainer");
-        document.getElementById("count").innerText = uids.length;
-        container.innerHTML = "";
-
-        if(uids.length === 0) {
-            container.innerHTML = "<div style='color:#6b7280; text-align:center;'>Chưa có UID cục bộ (Backend sẽ tự dùng 5 UID mặc định)</div>";
-            return;
-        }
-
-        uids.forEach((item, index) => {
-            container.innerHTML += `
-                <div class="uid-item">
-                    <span><b>#${index+1}:</b> ${item.username ? item.username : item.uid.slice(0,10)+'...'}</span>
-                    <span class="status status-ok">Đã Lưu</span>
-                </div>
-            `;
-        });
-    }
-
-    function initSandboxMode() {
-        try {
-            const flag = prompt("Nhập mã Sandbox Flag từ Developer Portal:");
-            if(flag) {
-                localStorage.setItem("pi_sandbox", flag);
-                log("🔄 Đã lưu Sandbox Flag. Đang tải lại...");
-                location.reload();
-            }
-        } catch(e) {
-            log("❌ Lỗi Sandbox: " + e.message);
-        }
-    }
-
-    async function authenticateUser() {
-        log("⏳ Đang gọi Pi.authenticate() cấp đủ quyền...");
-        try {
-            // KHAI BÁO ĐỦ 3 QUYỀN ĐỂ TRÁNH LỖI MISSING_SCOPE
-            const scopes = ['username', 'payments', 'wallet_address'];
-            
-            function onIncompletePaymentFound(payment) {
-                log("⚠️ Bỏ qua giao dịch dở dang: " + payment.identifier);
-            }
-
-            const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
-            log("🎉 Cấp quyền thành công! UID: " + auth.user.uid);
-
-            let uids = getStoredUIDs();
-            const exists = uids.some(u => u.uid === auth.user.uid);
-
-            if(!exists) {
-                uids.push({ uid: auth.user.uid, username: auth.user.username, accessToken: auth.accessToken });
-                localStorage.setItem("spa_uids", JSON.stringify(uids));
-                renderUIDs();
-                log("✅ Đã lưu UID này vào máy!");
-            } else {
-                log("ℹ️ UID này đã được cập nhật quyền mới.");
-            }
-
-        } catch(err) {
-            log("❌ Lỗi Authenticate: " + (err.message || JSON.stringify(err)));
-        }
-    }
-
-    // Gọi API Pay A2U chính thức qua Vercel Backend
-    async function triggerA2UPayment() {
-        log("🚀 Đang gửi lệnh Pay A2U sang Vercel Backend...");
-        try {
-            const stored = getStoredUIDs();
-            const uidsToSend = stored.length > 0 ? stored.map(u => u.uid) : [];
-
-            const response = await fetch("/api/pay5uid", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ 
-                    amount: 1,
-                    uids: uidsToSend.length > 0 ? uidsToSend : undefined 
-                })
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                log("🎉 THANH TOÁN A2U 5/5 THÀNH CÔNG RỰC RỠ!");
-                log("Tổng giao dịch: " + data.total);
-                console.log("Chi tiết:", data);
-            } else {
-                log("⚠️ Kết quả trả về từ Pi API:");
-                log(JSON.stringify(data.results || data, null, 2));
-            }
-        } catch (err) {
-            log("❌ Lỗi kết nối Backend: " + err.message);
-        }
-    }
-
-    function copyUIDs() {
-        const uids = getStoredUIDs();
-        if(uids.length === 0) {
-            alert("Chưa có UID nào!");
-            return;
-        }
-        navigator.clipboard.writeText(JSON.stringify(uids.map(u => u.uid), null, 2));
-        alert("Đã copy danh sách UIDs!");
-    }
-
-    function clearUIDs() {
-        if(confirm("Xóa danh sách UID?")) {
-            localStorage.removeItem("spa_uids");
-            renderUIDs();
-            log("🗑️ Đã xóa danh sách UID.");
-        }
-    }
-
+    function copyUIDs(){ const u=JSON.stringify(getStoredUIDs().map(x=>x.uid),null,2); navigator.clipboard.writeText(u); alert("Đã copy"); }
+    function clearUIDs(){ if(confirm("Xóa?")){ localStorage.removeItem("spa_uids"); renderUIDs(); log("🗑 Đã xóa"); } }
     renderUIDs();
 </script>
-
 </body>
 </html>
