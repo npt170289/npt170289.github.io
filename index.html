@@ -1,138 +1,80 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Spa Khải Hoàn - Testnet A2U Secure</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spa Khai Hoan - Trùm cuối (Pay 5 UIDs)</title>
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <style>
-*{box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}
-body{background:#0f0f19;color:#fff;margin:0;padding:20px;display:flex;justify-content:center}
-.container{background:#111827;border:1px solid #1f2937;border-radius:16px;padding:20px;max-width:450px;width:100%}
-h2{text-align:center;color:#f59e0b;margin:0 0 6px}
-p{font-size:13px;color:#9ca3af;text-align:center;margin:0 0 12px}
-.badge{background:#1e1b4b;color:#a5b4fc;padding:4px 8px;border-radius:6px;font-size:11px;display:block;text-align:center;margin-bottom:12px}
-.btn{width:100%;padding:14px;margin-top:10px;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
-.btn-auth{background:#10b981;color:#fff}
-.btn-pay{background:#f59e0b;color:#fff}
-.btn-copy{background:#3b82f6;color:#fff}
-.btn-clear{background:#ef4444;color:#fff;margin-top:5px}
-.uid-list{background:#030712;border:1px solid #00ff88;border-radius:10px;padding:12px;margin-top:15px;font-size:12px}
-.uid-item{background:#1f2937;padding:8px 12px;border-radius:6px;margin-bottom:6px;word-break:break-all;display:flex;justify-content:space-between}
-#log{background:#000;color:#00ff88;padding:10px;border-radius:8px;font-size:11px;font-family:monospace;height:180px;overflow-y:auto;margin-top:15px;white-space:pre-wrap}
+body{font-family:Arial;text-align:center;padding:20px;background:#fff;color:#000}
+h2{margin:10px}
+.btn{width:100%;padding:14px;border-radius:12px;border:0;font-size:16px;font-weight:bold;margin:8px 0;cursor:pointer}
+.green{background:#22c55e;color:white}
+.purple{background:#7c3aed;color:white}
+.box{background:#000;color:#00ff88;text-align:left;padding:12px;border-radius:12px;font-family:monospace;white-space:pre-wrap;min-height:120px;margin-top:10px}
+.ok{color:#22c55e}
 </style>
 </head>
 <body>
-<div class="container">
-<h2>Spa Khải Hoàn</h2>
-<p>A2U Payment - TESTNET SECURE 100%</p>
-<span class="badge">SECURE: Chinh chu only | api.minepi.com</span>
-<button class="btn btn-auth" onclick="authenticateUser()">1. Cấp Quyền Đủ Scope (Wallet)</button>
-<button class="btn btn-pay" onclick="triggerA2UPayment()">2. 🚀 Pay A2U Testnet (Chính chủ only)</button>
-<div class="uid-list">
-<strong>DEFAULT 5 UID spakhaihoan:</strong>
-<div style="margin-top:8px;color:#9ca3af;font-size:11px;line-height:16px">
-cad0a30e-eda3-46b3-a30c-ce71ee898db9<br>
-d434faf1-51ab-48ae-9b2f-e48ea4f699aa<br>
-e0c9e631-a143-467e-866e-fbd77e283816<br>
-6d7867e6-9abb-4f76-9cb4-85e146eee486<br>
-f27c937e-a7ae-4bf6-9455-9c7af9d3428f<br>
-</div>
-<div id="uidContainer" style="margin-top:10px"></div>
-<div style="margin-top:6px">Local: <span id="count">0</span> UID | Chính chủ: <span id="adminUid">Chưa cấp quyền</span></div>
-</div>
-<button class="btn btn-copy" onclick="copyUIDs()">Copy UIDs</button>
-<button class="btn btn-clear" onclick="clearUIDs()">Xóa Local</button>
-<div id="log">Secure ready - Chi chinh chu moi pay duoc...</div>
+<h2>Spa Khai Hoan - Trùm cuối (Pay 5 UIDs)</h2>
+<div id="status" style="color:#16a34a;font-weight:bold;font-size:18px;margin:10px">🎉 Pay thành công! 5/5 OK</div>
+<button class="btn green" onclick="capQuyen()">🔑 1. Cấp quyền ví (bấm trên TỪNG ĐT)</button>
+<button class="btn purple" onclick="pay5()">🚀 2. Chạy Pay 5 UIDs ngay</button>
+<div id="log" class="box">Chưa chạy...
 </div>
 <script>
-try{ 
-    Pi.init({ version:"2.0", sandbox:true }); 
-    log("✅ Pi SDK sandbox:true - Secure Mode"); 
-}catch(e){ 
-    log("❌ SDK: "+e.message); 
-}
-function log(m){ 
-    const b=document.getElementById("log"); 
-    const time = new Date().toLocaleTimeString();
-    b.innerHTML+="<div>["+time+"] "+m+"</div>"; 
-    b.scrollTop=b.scrollHeight; 
-}
-function getStoredUIDs(){ return JSON.parse(localStorage.getItem("spa_uids")||"[]"); }
-function renderUIDs(){
-  const uids = getStoredUIDs();
-  document.getElementById("count").innerText = uids.length;
-  const adminUid = localStorage.getItem("pi_adminUid");
-  if(adminUid) document.getElementById("adminUid").innerText = adminUid.slice(0,8)+"...";
-  const c = document.getElementById("uidContainer");
-  c.innerHTML="";
-  if(uids.length === 0){ 
-      c.innerHTML="<div style='color:#6b7280;text-align:center'>Chưa có UID local - dùng 5 UID mặc định</div>"; 
-      return; 
-  }
-  uids.forEach((it,i)=>{ 
-      c.innerHTML += `<div class="uid-item"><span>#${i+1} ${it.username||it.uid.slice(0,8)}...</span><span>Đã Lưu</span></div>`; 
-  });
-}
-async function authenticateUser(){
-  log("⏳ Pi.authenticate...");
+Pi.init({version:"2.0", sandbox:false});
+const DEFAULT_5UIDS = [
+ "cad0a30e-eda3-46b3-a30c-ce71ee898db9",
+ "d434faf1-51ab-48ae-9b2f-e48ea4f699aa",
+ "e0c9e631-a143-467e-866e-fbd77e283816",
+ "6d7867e6-9abb-4f76-9cb4-85e146eee486",
+ "f27c937e-a7ae-4bf6-9455-9c7af9d3428f"
+];
+let accessToken = null;
+async function capQuyen(){
   try{
-    const scopes = ['username','payments','wallet_address'];
-    const auth = await Pi.authenticate(scopes, (p)=>{ log("⚠ incomplete: "+p.identifier); });
-    log("🎉 UID: "+auth.user.uid);
-    // LUU QUAN TRONG CHO CHECK CHINH CHU
-    localStorage.setItem("pi_accessToken", auth.accessToken);
-    localStorage.setItem("pi_adminUid", auth.user.uid);
-    let uids = getStoredUIDs();
-    if(!uids.some(u=>u.uid===auth.user.uid)){
-      uids.push({uid:auth.user.uid, username:auth.user.username});
-      localStorage.setItem("spa_uids", JSON.stringify(uids)); 
-    }
-    renderUIDs();
-    log("✅ Da luu accessToken - Bay gio chi chinh chu moi pay duoc");
-  }catch(err){ 
-    log("❌ Auth: "+(err.message||JSON.stringify(err))); 
-  }
+    const auth = await Pi.authenticate(['payments'], (p)=>{});
+    accessToken = auth.accessToken;
+    document.getElementById('log').innerText = `Đã cấp quyền ví!\nUID: ${auth.user.uid}\naccessToken ok`;
+    document.getElementById('status').innerText = `✅ Đã cấp quyền ví ${auth.user.uid.substring(0,8)}...`;
+  }catch(e){ alert("Lỗi cấp quyền: "+e.message); }
 }
-async function triggerA2UPayment(){
-  const accessToken = localStorage.getItem("pi_accessToken");
+async function pay5(){
   if(!accessToken){
-    log("❌ CHUA CAP QUYEN! Bam nut 1 truoc");
-    alert("Chưa cấp quyền! Bấm nút Cấp Quyền trước bro!");
-    return;
+    try{
+      const auth = await Pi.authenticate(['payments'], (p)=>{});
+      accessToken = auth.accessToken;
+    }catch(e){ return alert("Chưa đăng nhập Pi!"); }
   }
-  log("🚀 POST -> Vercel Backend (chinh chu check)...");
+  document.getElementById('log').innerText = "Đang pay 5 UIDs...";
   try{
-    const stored = getStoredUIDs();
-    const uidsToSend = stored.length > 0 ? stored.map(u => u.uid) : undefined;
-    const res = await fetch("https://spakhaihoan.vercel.app/api/pay5uid", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            amount: 1,
-            uids: uidsToSend,
-            accessToken: accessToken
-        })
+    const r = await fetch('/api/pay5uid',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ accessToken, uids: DEFAULT_5UIDS, amount: 1 })
     });
-    const data = await res.json();
-    if(res.status === 403){
-      log(`🚫 403 FORBIDDEN: ${data.error}`);
-      alert("KHONG PHAI CHINH CHU! Chi chu quan Spa moi duoc pay");
-      return;
+    const data = await r.json();
+    let txt = `success: ${data.success}\ntotal: ${data.total}\n\n`;
+    if(data.results){
+      data.results.forEach((x,i)=>{
+        const short = x.uid ? x.uid.substring(0,6)+'...' : `uid${i}`;
+        txt += `${x.success ? '✅' : '❌'} ${short} ${x.success ? 'OK' : 'FAIL'}\n`;
+      });
     }
+    txt += `\n🎉 ${data.successCount || 0}/${data.total} THÀNH CÔNG - TRÙM CUỐI!`;
+    document.getElementById('log').innerText = txt;
     if(data.success){
-        log(`🎉 ${data.total}/5 THANH CONG - Chinh chu xac nhan`);
+      document.getElementById('status').innerText = `🎉 Pay thành công! ${data.total}/5 OK`;
+      document.getElementById('status').style.color = "#16a34a";
     } else {
-        log(`⚠ Ket qua: ${JSON.stringify(data.results || data).slice(0,500)}`);
+      document.getElementById('status').innerText = `⚠️ Pay ${data.successCount || 0}/${data.total} - check log`;
+      document.getElementById('status').style.color = "#eab308";
     }
-    console.log(data);
-  }catch(e){ 
-    log("❌ Backend: "+e.message); 
+  }catch(e){
+    document.getElementById('log').innerText = "Lỗi: "+e.message;
   }
 }
-function copyUIDs(){ navigator.clipboard.writeText(JSON.stringify(getStoredUIDs().map(x=>x.uid),null,2)); alert("Đã copy UIDs!"); }
-function clearUIDs(){ if(confirm("Xóa local?")){ localStorage.removeItem("spa_uids"); localStorage.removeItem("pi_accessToken"); localStorage.removeItem("pi_adminUid"); renderUIDs(); log("🗑 Đã xóa."); } }
-renderUIDs();
 </script>
 </body>
 </html>
