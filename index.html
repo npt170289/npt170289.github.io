@@ -16,7 +16,7 @@ h2{margin:10px 0;font-size:18px}
 </head>
 <body>
 <h2>Spa Khai Hoan - Trùm cuối (Pay 5 UIDs)</h2>
-<div id="status" style="color:#eab308;font-weight:bold;font-size:16px;margin:10px">Chưa chạy - bấm nút xanh cấp quyền trước</div>
+<div id="status" style="color:#eab308;font-weight:bold;font-size:16px;margin:10px">Test 4/5 - rà lại domain lệch UID</div>
 
 <button class="btn green" onclick="capQuyen()">🔑 1. Cấp quyền ví (bấm trên TỪNG ĐT)</button>
 <button class="btn purple" onclick="pay5()">🚀 2. Chạy Pay 5 UIDs ngay</button>
@@ -28,17 +28,14 @@ Backend: spakhaihoan.vercel.app
 
 <script>
 Pi.init({version:"2.0", sandbox:false});
-
 const BACKEND_URL = 'https://spakhaihoan.vercel.app/api/pay5uid';
-
 const DEFAULT_5UIDS = [
  "cad0a30e-eda3-46b3-a30c-ce71ee898db9",
- "d434faf1-51ab-48ae-9b2f-e48ea4f699aa",
- "e0c9e631-a143-467e-866e-fbd77e283816",
- "6d7867e6-9abb-4f76-9cb4-85e146eee486",
- "f27c937e-a7ae-4bf6-9455-9c7af9d3428f"
+ "f27c937e-a7ae-4bf6-9455-9c7af9d3428f",
+ "3fe9deec-6ffd-4d69-8efd-ad8303b03236",
+ "ba55bc36-1364-4e06-b20b-933aa0487909",
+ "e0c9e631-a143-467e-866e-fbd77e283816"
 ];
-
 let accessToken = null;
 const SCOPES = ['username','payments','wallet_address'];
 
@@ -46,13 +43,10 @@ async function capQuyen(){
   try{
     const auth = await Pi.authenticate(SCOPES, (p)=>{});
     accessToken = auth.accessToken;
-    document.getElementById('log').innerText = `Đã cấp quyền ví!\nUID: ${auth.user.uid}\nScopes: ${SCOPES.join(',')}\nDomain: npt170289.github.io\nBackend: ${BACKEND_URL}\naccessToken ok`;
-    document.getElementById('status').innerText = `✅ Đã cấp quyền ví ${auth.user.uid.substring(0,8)}...`;
+    document.getElementById('log').innerText = `Đã cấp quyền ví!\nUID: ${auth.user.uid}\nScopes: ${SCOPES.join(',')}\naccessToken ok`;
+    document.getElementById('status').innerText = `✅ Đã cấp quyền ${auth.user.uid.substring(0,8)}...`;
     document.getElementById('status').style.color = "#16a34a";
-  }catch(e){ 
-    alert("Lỗi cấp quyền: "+e.message); 
-    document.getElementById('log').innerText = "Lỗi cấp quyền: " + e.message;
-  }
+  }catch(e){ alert("Lỗi cấp quyền: "+e.message); }
 }
 
 async function pay5(){
@@ -60,9 +54,7 @@ async function pay5(){
     try{
       const auth = await Pi.authenticate(SCOPES, (p)=>{});
       accessToken = auth.accessToken;
-    }catch(e){ 
-      return alert("Chưa đăng nhập Pi! " + e.message); 
-    }
+    }catch(e){ return alert("Chưa đăng nhập Pi!"); }
   }
   document.getElementById('log').innerText = "Đang pay 5 UIDs...\nGọi: " + BACKEND_URL;
   try{
@@ -71,33 +63,19 @@ async function pay5(){
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ accessToken, uids: DEFAULT_5UIDS, amount: 1 })
     });
-    const text = await r.text();
-    let data;
-    try{ data = JSON.parse(text); } catch{ 
-      document.getElementById('log').innerText = "Lỗi JSON - Backend trả về HTML:\n" + text.slice(0,800);
-      return;
-    }
-    
+    const data = await r.json();
     let txt = `success: ${data.success}\ntotal: ${data.total}\nsuccessCount: ${data.successCount}\n\n`;
     if(data.results){
       data.results.forEach((x,i)=>{
         const short = x.uid ? x.uid.substring(0,6)+'...' : `uid${i}`;
-        const err = x.error ? ` ${x.error}` : '';
-        txt += `${x.success ? '✅' : '❌'} ${short} ${x.success ? 'OK' : 'FAIL '+ (x.status||'') + err}\n`;
+        txt += `${x.success ? '✅' : '❌'} ${short} ${x.success ? 'OK' : 'FAIL '+ (x.status||'') + ' ' + (x.error||'')}\n`;
       });
     }
-    txt += `\n🎉 ${data.successCount || 0}/${data.total} THÀNH CÔNG - TRÙM CUỐI!\nBackend: spakhaihoan.vercel.app`;
+    txt += `\n🎉 ${data.successCount || 0}/${data.total} THÀNH CÔNG`;
     document.getElementById('log').innerText = txt;
-    
-    if(data.success){
-      document.getElementById('status').innerText = `🎉 Pay thành công! ${data.total}/5 OK`;
-      document.getElementById('status').style.color = "#16a34a";
-    } else {
-      document.getElementById('status').innerText = `⚠️ Pay ${data.successCount || 0}/${data.total} - check log`;
-      document.getElementById('status').style.color = "#eab308";
-    }
+    document.getElementById('status').innerText = txt.split('\n')[2] || '';
   }catch(e){
-    document.getElementById('log').innerText = "Lỗi fetch: "+e.message + "\nBackend: " + BACKEND_URL;
+    document.getElementById('log').innerText = "Lỗi: "+e.message;
   }
 }
 </script>
