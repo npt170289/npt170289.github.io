@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Spa Khai Hoan - 5 UIDs Final</title>
+<title>Spa Khai Hoan - 5 UIDs Final FIXED</title>
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <style>
 body{font-family:Arial;text-align:center;padding:20px;background:#fff;color:#000}
@@ -15,12 +15,13 @@ body{font-family:Arial;text-align:center;padding:20px;background:#fff;color:#000
 </head>
 <body>
 <h2>Spa Khai Hoan - Pay 5 UIDs Final</h2>
-<div id="status" style="color:#eab308;font-weight:bold;margin:10px">Chuan 5 UID - npt170289.github.io</div>
+<div id="status" style="color:#eab308;font-weight:bold;margin:10px">FIXED UID 3236 - npt170289.github.io</div>
 <button class="btn green" onclick="capQuyen()">🔑 1. Cap quyen vi</button>
 <button class="btn purple" onclick="pay5()">🚀 2. Pay 5 UIDs</button>
 <div id="log" class="box">Chua chay...
 Domain: npt170289.github.io
 Backend: spakhaihoan.vercel.app
+UID 3236 FIXED: 3f9deec8-6ffd-4d69-8efd-ad8303b03236
 </div>
 <script>
 Pi.init({version:"2.0", sandbox:false});
@@ -49,9 +50,16 @@ async function pay5(){
   document.getElementById('log').innerText = "Dang pay...\n"+BACKEND_URL;
   try{
     const r = await fetch(BACKEND_URL,{method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({accessToken,uids:DEFAULT_5UIDS,amount:1})});
-    const data = await r.json();
+    const text = await r.text();
+    let data;
+    try{ data = JSON.parse(text); } catch { document.getElementById('log').innerText = "RAW Response:\n"+text; return; }
+    if(data.successCount === undefined){
+      document.getElementById('log').innerText = "Backend tra ve:\n"+JSON.stringify(data,null,2);
+      document.getElementById('status').innerText = "Check backend log";
+      return;
+    }
     let txt = `successCount: ${data.successCount}/${data.total}\n\n`;
-    data.results?.forEach(x=>{ txt+= `${x.success?'OK':'FAIL'} ${x.uid.substring(0,6)}... ${x.success?'OK':(x.error||'')}\n`; });
+    data.results?.forEach(x=>{ txt+= `${x.success?'OK':'FAIL'} ${x.uid.substring(0,6)}... ${x.success?'OK':(x.error||'')} \n`; });
     document.getElementById('log').innerText = txt;
     document.getElementById('status').innerText = `${data.successCount}/${data.total} THANH CONG`;
   }catch(e){ document.getElementById('log').innerText = "Loi: "+e.message; }
