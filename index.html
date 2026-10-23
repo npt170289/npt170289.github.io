@@ -12,18 +12,21 @@ h2{margin:10px}
 .green{background:#22c55e;color:white}
 .purple{background:#7c3aed;color:white}
 .box{background:#000;color:#00ff88;text-align:left;padding:12px;border-radius:12px;font-family:monospace;white-space:pre-wrap;min-height:120px;margin-top:10px}
-.ok{color:#22c55e}
 </style>
 </head>
 <body>
 <h2>Spa Khai Hoan - Trùm cuối (Pay 5 UIDs)</h2>
-<div id="status" style="color:#16a34a;font-weight:bold;font-size:18px;margin:10px">🎉 Pay thành công! 5/5 OK</div>
+<div id="status" style="color:#eab308;font-weight:bold;font-size:18px;margin:10px">Chưa chạy - bấm nút xanh cấp quyền trước</div>
+
 <button class="btn green" onclick="capQuyen()">🔑 1. Cấp quyền ví (bấm trên TỪNG ĐT)</button>
 <button class="btn purple" onclick="pay5()">🚀 2. Chạy Pay 5 UIDs ngay</button>
+
 <div id="log" class="box">Chưa chạy...
 </div>
+
 <script>
 Pi.init({version:"2.0", sandbox:false});
+
 const DEFAULT_5UIDS = [
  "cad0a30e-eda3-46b3-a30c-ce71ee898db9",
  "d434faf1-51ab-48ae-9b2f-e48ea4f699aa",
@@ -31,19 +34,24 @@ const DEFAULT_5UIDS = [
  "6d7867e6-9abb-4f76-9cb4-85e146eee486",
  "f27c937e-a7ae-4bf6-9455-9c7af9d3428f"
 ];
+
 let accessToken = null;
+const SCOPES = ['username','payments','wallet_address'];
+
 async function capQuyen(){
   try{
-    const auth = await Pi.authenticate(['payments'], (p)=>{});
+    const auth = await Pi.authenticate(SCOPES, (p)=>{});
     accessToken = auth.accessToken;
-    document.getElementById('log').innerText = `Đã cấp quyền ví!\nUID: ${auth.user.uid}\naccessToken ok`;
+    document.getElementById('log').innerText = `Đã cấp quyền ví!\nUID: ${auth.user.uid}\nScopes: ${SCOPES.join(',')}\naccessToken ok`;
     document.getElementById('status').innerText = `✅ Đã cấp quyền ví ${auth.user.uid.substring(0,8)}...`;
+    document.getElementById('status').style.color = "#16a34a";
   }catch(e){ alert("Lỗi cấp quyền: "+e.message); }
 }
+
 async function pay5(){
   if(!accessToken){
     try{
-      const auth = await Pi.authenticate(['username','payments','wallet_address'], (p)=>{});
+      const auth = await Pi.authenticate(SCOPES, (p)=>{});
       accessToken = auth.accessToken;
     }catch(e){ return alert("Chưa đăng nhập Pi!"); }
   }
@@ -59,11 +67,12 @@ async function pay5(){
     if(data.results){
       data.results.forEach((x,i)=>{
         const short = x.uid ? x.uid.substring(0,6)+'...' : `uid${i}`;
-        txt += `${x.success ? '✅' : '❌'} ${short} ${x.success ? 'OK' : 'FAIL'}\n`;
+        txt += `${x.success ? '✅' : '❌'} ${short} ${x.success ? 'OK' : 'FAIL ' + (x.status||'')}\n`;
       });
     }
     txt += `\n🎉 ${data.successCount || 0}/${data.total} THÀNH CÔNG - TRÙM CUỐI!`;
     document.getElementById('log').innerText = txt;
+    
     if(data.success){
       document.getElementById('status').innerText = `🎉 Pay thành công! ${data.total}/5 OK`;
       document.getElementById('status').style.color = "#16a34a";
