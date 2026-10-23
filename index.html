@@ -3,11 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Spa Khai Hoan - Trùm cuối (Pay 5 UIDs)</title>
+<title>Spa Khai Hoan - 5 UIDs Final</title>
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <style>
 body{font-family:Arial;text-align:center;padding:20px;background:#fff;color:#000}
-h2{margin:10px 0;font-size:18px}
 .btn{width:100%;padding:14px;border-radius:12px;border:0;font-size:16px;font-weight:bold;margin:8px 0;cursor:pointer}
 .green{background:#22c55e;color:white}
 .purple{background:#7c3aed;color:white}
@@ -15,68 +14,47 @@ h2{margin:10px 0;font-size:18px}
 </style>
 </head>
 <body>
-<h2>Spa Khai Hoan - Trùm cuối (Pay 5 UIDs)</h2>
-<div id="status" style="color:#eab308;font-weight:bold;font-size:16px;margin:10px">Test 4/5 - rà lại domain lệch UID</div>
-
-<button class="btn green" onclick="capQuyen()">🔑 1. Cấp quyền ví (bấm trên TỪNG ĐT)</button>
-<button class="btn purple" onclick="pay5()">🚀 2. Chạy Pay 5 UIDs ngay</button>
-
-<div id="log" class="box">Chưa chạy...
+<h2>Spa Khai Hoan - Pay 5 UIDs Final</h2>
+<div id="status" style="color:#eab308;font-weight:bold;margin:10px">Chuan 5 UID - npt170289.github.io</div>
+<button class="btn green" onclick="capQuyen()">🔑 1. Cap quyen vi</button>
+<button class="btn purple" onclick="pay5()">🚀 2. Pay 5 UIDs</button>
+<div id="log" class="box">Chua chay...
 Domain: npt170289.github.io
 Backend: spakhaihoan.vercel.app
 </div>
-
 <script>
 Pi.init({version:"2.0", sandbox:false});
 const BACKEND_URL = 'https://spakhaihoan.vercel.app/api/pay5uid';
 const DEFAULT_5UIDS = [
  "cad0a30e-eda3-46b3-a30c-ce71ee898db9",
+ "d434faf1-51ab-48ae-9b2f-e48ea4f699aa",
  "f27c937e-a7ae-4bf6-9455-9c7af9d3428f",
- "3fe9deec-6ffd-4d69-8efd-ad8303b03236",
- "ba55bc36-1364-4e06-b20b-933aa0487909",
- "e0c9e631-a143-467e-866e-fbd77e283816"
+ "3f9deec8-6ffd-4d69-8efd-ad8303b03236",
+ "ba55bc36-1364-4e06-b20b-933aa0487909"
 ];
 let accessToken = null;
 const SCOPES = ['username','payments','wallet_address'];
-
 async function capQuyen(){
   try{
-    const auth = await Pi.authenticate(SCOPES, (p)=>{});
+    const auth = await Pi.authenticate(SCOPES, ()=>{});
     accessToken = auth.accessToken;
-    document.getElementById('log').innerText = `Đã cấp quyền ví!\nUID: ${auth.user.uid}\nScopes: ${SCOPES.join(',')}\naccessToken ok`;
-    document.getElementById('status').innerText = `✅ Đã cấp quyền ${auth.user.uid.substring(0,8)}...`;
-    document.getElementById('status').style.color = "#16a34a";
-  }catch(e){ alert("Lỗi cấp quyền: "+e.message); }
+    document.getElementById('log').innerText = `Da cap quyen!\nUID: ${auth.user.uid}`;
+    document.getElementById('status').innerText = `OK ${auth.user.uid.substring(0,8)}...`;
+  }catch(e){ alert(e.message); }
 }
-
 async function pay5(){
   if(!accessToken){
-    try{
-      const auth = await Pi.authenticate(SCOPES, (p)=>{});
-      accessToken = auth.accessToken;
-    }catch(e){ return alert("Chưa đăng nhập Pi!"); }
+    try{ const auth = await Pi.authenticate(SCOPES, ()=>{}); accessToken = auth.accessToken; }catch(e){ return alert("Chua login Pi"); }
   }
-  document.getElementById('log').innerText = "Đang pay 5 UIDs...\nGọi: " + BACKEND_URL;
+  document.getElementById('log').innerText = "Dang pay...\n"+BACKEND_URL;
   try{
-    const r = await fetch(BACKEND_URL,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ accessToken, uids: DEFAULT_5UIDS, amount: 1 })
-    });
+    const r = await fetch(BACKEND_URL,{method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({accessToken,uids:DEFAULT_5UIDS,amount:1})});
     const data = await r.json();
-    let txt = `success: ${data.success}\ntotal: ${data.total}\nsuccessCount: ${data.successCount}\n\n`;
-    if(data.results){
-      data.results.forEach((x,i)=>{
-        const short = x.uid ? x.uid.substring(0,6)+'...' : `uid${i}`;
-        txt += `${x.success ? '✅' : '❌'} ${short} ${x.success ? 'OK' : 'FAIL '+ (x.status||'') + ' ' + (x.error||'')}\n`;
-      });
-    }
-    txt += `\n🎉 ${data.successCount || 0}/${data.total} THÀNH CÔNG`;
+    let txt = `successCount: ${data.successCount}/${data.total}\n\n`;
+    data.results?.forEach(x=>{ txt+= `${x.success?'OK':'FAIL'} ${x.uid.substring(0,6)}... ${x.success?'OK':(x.error||'')}\n`; });
     document.getElementById('log').innerText = txt;
-    document.getElementById('status').innerText = txt.split('\n')[2] || '';
-  }catch(e){
-    document.getElementById('log').innerText = "Lỗi: "+e.message;
-  }
+    document.getElementById('status').innerText = `${data.successCount}/${data.total} THANH CONG`;
+  }catch(e){ document.getElementById('log').innerText = "Loi: "+e.message; }
 }
 </script>
 </body>
