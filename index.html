@@ -7,25 +7,29 @@
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <style>
 body{font-family:Arial;text-align:center;padding:20px;background:#fff;color:#000}
-h2{margin:10px}
+h2{margin:10px 0;font-size:18px}
 .btn{width:100%;padding:14px;border-radius:12px;border:0;font-size:16px;font-weight:bold;margin:8px 0;cursor:pointer}
 .green{background:#22c55e;color:white}
 .purple{background:#7c3aed;color:white}
-.box{background:#000;color:#00ff88;text-align:left;padding:12px;border-radius:12px;font-family:monospace;white-space:pre-wrap;min-height:120px;margin-top:10px}
+.box{background:#000;color:#00ff88;text-align:left;padding:12px;border-radius:12px;font-family:monospace;white-space:pre-wrap;min-height:120px;margin-top:10px;font-size:13px}
 </style>
 </head>
 <body>
 <h2>Spa Khai Hoan - Trùm cuối (Pay 5 UIDs)</h2>
-<div id="status" style="color:#eab308;font-weight:bold;font-size:18px;margin:10px">Chưa chạy - bấm nút xanh cấp quyền trước</div>
+<div id="status" style="color:#eab308;font-weight:bold;font-size:16px;margin:10px">Chưa chạy - bấm nút xanh cấp quyền trước</div>
 
 <button class="btn green" onclick="capQuyen()">🔑 1. Cấp quyền ví (bấm trên TỪNG ĐT)</button>
 <button class="btn purple" onclick="pay5()">🚀 2. Chạy Pay 5 UIDs ngay</button>
 
 <div id="log" class="box">Chưa chạy...
+Domain: npt170289.github.io
+Backend: spakhaihoan.vercel.app
 </div>
 
 <script>
 Pi.init({version:"2.0", sandbox:false});
+
+const BACKEND_URL = 'https://spakhaihoan.vercel.app/api/pay5uid';
 
 const DEFAULT_5UIDS = [
  "cad0a30e-eda3-46b3-a30c-ce71ee898db9",
@@ -42,10 +46,13 @@ async function capQuyen(){
   try{
     const auth = await Pi.authenticate(SCOPES, (p)=>{});
     accessToken = auth.accessToken;
-    document.getElementById('log').innerText = `Đã cấp quyền ví!\nUID: ${auth.user.uid}\nScopes: ${SCOPES.join(',')}\naccessToken ok`;
+    document.getElementById('log').innerText = `Đã cấp quyền ví!\nUID: ${auth.user.uid}\nScopes: ${SCOPES.join(',')}\nDomain: npt170289.github.io\nBackend: ${BACKEND_URL}\naccessToken ok`;
     document.getElementById('status').innerText = `✅ Đã cấp quyền ví ${auth.user.uid.substring(0,8)}...`;
     document.getElementById('status').style.color = "#16a34a";
-  }catch(e){ alert("Lỗi cấp quyền: "+e.message); }
+  }catch(e){ 
+    alert("Lỗi cấp quyền: "+e.message); 
+    document.getElementById('log').innerText = "Lỗi cấp quyền: " + e.message;
+  }
 }
 
 async function pay5(){
@@ -53,24 +60,33 @@ async function pay5(){
     try{
       const auth = await Pi.authenticate(SCOPES, (p)=>{});
       accessToken = auth.accessToken;
-    }catch(e){ return alert("Chưa đăng nhập Pi!"); }
+    }catch(e){ 
+      return alert("Chưa đăng nhập Pi! " + e.message); 
+    }
   }
-  document.getElementById('log').innerText = "Đang pay 5 UIDs...";
+  document.getElementById('log').innerText = "Đang pay 5 UIDs...\nGọi: " + BACKEND_URL;
   try{
-    const r = await fetch('https://spakhaihoan.vercel.app/api/pay5uid',{
+    const r = await fetch(BACKEND_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ accessToken, uids: DEFAULT_5UIDS, amount: 1 })
     });
-    const data = await r.json();
-    let txt = `success: ${data.success}\ntotal: ${data.total}\n\n`;
+    const text = await r.text();
+    let data;
+    try{ data = JSON.parse(text); } catch{ 
+      document.getElementById('log').innerText = "Lỗi JSON - Backend trả về HTML:\n" + text.slice(0,800);
+      return;
+    }
+    
+    let txt = `success: ${data.success}\ntotal: ${data.total}\nsuccessCount: ${data.successCount}\n\n`;
     if(data.results){
       data.results.forEach((x,i)=>{
         const short = x.uid ? x.uid.substring(0,6)+'...' : `uid${i}`;
-        txt += `${x.success ? '✅' : '❌'} ${short} ${x.success ? 'OK' : 'FAIL ' + (x.status||'')}\n`;
+        const err = x.error ? ` ${x.error}` : '';
+        txt += `${x.success ? '✅' : '❌'} ${short} ${x.success ? 'OK' : 'FAIL '+ (x.status||'') + err}\n`;
       });
     }
-    txt += `\n🎉 ${data.successCount || 0}/${data.total} THÀNH CÔNG - TRÙM CUỐI!`;
+    txt += `\n🎉 ${data.successCount || 0}/${data.total} THÀNH CÔNG - TRÙM CUỐI!\nBackend: spakhaihoan.vercel.app`;
     document.getElementById('log').innerText = txt;
     
     if(data.success){
@@ -81,7 +97,7 @@ async function pay5(){
       document.getElementById('status').style.color = "#eab308";
     }
   }catch(e){
-    document.getElementById('log').innerText = "Lỗi: "+e.message;
+    document.getElementById('log').innerText = "Lỗi fetch: "+e.message + "\nBackend: " + BACKEND_URL;
   }
 }
 </script>
