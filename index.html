@@ -43,7 +43,7 @@ async function capQuyen(){
 async function pay5(){
   if(!accessToken){
     try{
-      const auth = await Pi.authenticate(['payments'], (p)=>{});
+      const auth = await Pi.authenticate(['username','payments','wallet_address'], (p)=>{});
       accessToken = auth.accessToken;
     }catch(e){ return alert("Chưa đăng nhập Pi!"); }
   }
