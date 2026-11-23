@@ -17,7 +17,7 @@ html { scroll-behavior: smooth; }
 body {
   font-family: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
   color: var(--ink);
-  background: var(--white);
+  background: url('../images/spa-bg-nature.jpg') center / cover no-repeat fixed;
   line-height: 1.65;
   font-size: 16px;
 }
@@ -74,8 +74,8 @@ h1 em, h2 em { font-style: italic; color: var(--gold); font-weight: 600; }
 
 /* Sections */
 .section { padding: 76px 0; }
-.section-cream { background: var(--cream); }
-.section-dark { background: var(--green); color: #f2ede0; }
+.section-cream { background: rgba(247, 242, 233, 0.75); }
+.section-dark { background: rgba(13, 43, 38, 0.85); color: #f2ede0; }
 .section-dark h2 { color: #fff; }
 .sec-label {
   text-transform: uppercase; letter-spacing: 3px; font-size: 13px; font-weight: 600;
@@ -156,7 +156,7 @@ h1 em, h2 em { font-style: italic; color: var(--gold); font-weight: 600; }
 .contact-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
 
 /* Footer */
-.site-footer { background: #08211d; color: #cfc8b4; padding: 54px 0 0; }
+.site-footer { background: rgba(8, 33, 29, 0.92); color: #cfc8b4; padding: 54px 0 0; }
 .footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; padding-bottom: 40px; }
 .footer-brand { font-family: "Playfair Display", Georgia, serif; color: #fff; font-size: 22px; font-weight: 700; }
 .footer-head { color: var(--gold); font-size: 12.5px; letter-spacing: 2.5px; text-transform: uppercase; font-weight: 600; margin-bottom: 10px; }
