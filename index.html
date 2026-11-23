@@ -1,69 +1,270 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Spa Khai Hoan - 5 UIDs Final FIXED</title>
-<script src="https://sdk.minepi.com/pi-sdk.js"></script>
-<style>
-body{font-family:Arial;text-align:center;padding:20px;background:#fff;color:#000}
-.btn{width:100%;padding:14px;border-radius:12px;border:0;font-size:16px;font-weight:bold;margin:8px 0;cursor:pointer}
-.green{background:#22c55e;color:white}
-.purple{background:#7c3aed;color:white}
-.box{background:#000;color:#00ff88;text-align:left;padding:12px;border-radius:12px;font-family:monospace;white-space:pre-wrap;min-height:120px;margin-top:10px;font-size:13px}
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spa massage Quận 1 | Massage trị liệu KHẢI HOÀN Spa</title>
+<meta name="description" content="KHẢI HOÀN Spa — Massage khỏe trị liệu, spa đẳng cấp tại trung tâm Quận 1, view công viên Tao Đàn. 16 Cách Mạng Tháng Tám, P. Bến Thành, TP. Hồ Chí Minh. Hotline 070 555 3479.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-<h2>Spa Khai Hoan - Pay 5 UIDs Final</h2>
-<div id="status" style="color:#eab308;font-weight:bold;margin:10px">FIXED UID 3236 - npt170289.github.io</div>
-<button class="btn green" onclick="capQuyen()">🔑 1. Cap quyen vi</button>
-<button class="btn purple" onclick="pay5()">🚀 2. Pay 5 UIDs</button>
-<div id="log" class="box">Chua chay...
-Domain: npt170289.github.io
-Backend: spakhaihoan.vercel.app
-UID 3236 FIXED: 3f9deec8-6ffd-4d69-8efd-ad8303b03236
-</div>
-<script>
-Pi.init({version:"2.0", sandbox:false});
-const BACKEND_URL = 'https://spakhaihoan.vercel.app/api/pay5uid';
-const DEFAULT_5UIDS = [
- "cad0a30e-eda3-46b3-a30c-ce71ee898db9",
- "d434faf1-51ab-48ae-9b2f-e48ea4f699aa",
- "f27c937e-a7ae-4bf6-9455-9c7af9d3428f",
- "3f9deec8-6ffd-4d69-8efd-ad8303b03236",
- "ba55bc36-1364-4e06-b20b-933aa0487909"
-];
-let accessToken = null;
-const SCOPES = ['username','payments','wallet_address'];
-async function capQuyen(){
-  try{
-    const auth = await Pi.authenticate(SCOPES, ()=>{});
-    accessToken = auth.accessToken;
-    document.getElementById('log').innerText = `Da cap quyen!\nUID: ${auth.user.uid}`;
-    document.getElementById('status').innerText = `OK ${auth.user.uid.substring(0,8)}...`;
-  }catch(e){ alert(e.message); }
-}
-async function pay5(){
-  if(!accessToken){
-    try{ const auth = await Pi.authenticate(SCOPES, ()=>{}); accessToken = auth.accessToken; }catch(e){ return alert("Chua login Pi"); }
-  }
-  document.getElementById('log').innerText = "Dang pay...\n"+BACKEND_URL;
-  try{
-    const r = await fetch(BACKEND_URL,{method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({accessToken,uids:DEFAULT_5UIDS,amount:1})});
-    const text = await r.text();
-    let data;
-    try{ data = JSON.parse(text); } catch { document.getElementById('log').innerText = "RAW Response:\n"+text; return; }
-    if(data.successCount === undefined){
-      document.getElementById('log').innerText = "Backend tra ve:\n"+JSON.stringify(data,null,2);
-      document.getElementById('status').innerText = "Check backend log";
-      return;
-    }
-    let txt = `successCount: ${data.successCount}/${data.total}\n\n`;
-    data.results?.forEach(x=>{ txt+= `${x.success?'OK':'FAIL'} ${x.uid.substring(0,6)}... ${x.success?'OK':(x.error||'')} \n`; });
-    document.getElementById('log').innerText = txt;
-    document.getElementById('status').innerText = `${data.successCount}/${data.total} THANH CONG`;
-  }catch(e){ document.getElementById('log').innerText = "Loi: "+e.message; }
-}
-</script>
+
+<header class="site-header">
+  <a class="brand" href="#home">KHẢI HOÀN <span>Spa</span></a>
+  <nav class="main-nav" aria-label="Điều hướng chính">
+    <a href="#about">Về chúng tôi</a>
+    <a href="#services">Dịch vụ</a>
+    <a href="#khong-gian">Không gian</a>
+    <a href="#gallery">Hình ảnh</a>
+    <a href="#contact">Liên hệ</a>
+  </nav>
+  <a class="btn btn-gold btn-call-header" href="tel:+84705553479">070 555 3479</a>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <img class="hero-bg" src="images/spa-hero.jpg" alt="Sảnh tiếp đón KHẢI HOÀN Spa" fetchpriority="high">
+  <div class="hero-overlay"></div>
+  <div class="hero-inner">
+    <p class="hero-eyebrow">Massage khỏe trị liệu</p>
+    <h1>KHẢI HOÀN<br><em>Massage</em></h1>
+    <p class="hero-sub">Spa đẳng cấp tại trung tâm Quận 1</p>
+    <p class="hero-view">View công viên Tao Đàn</p>
+    <p class="hero-addr">16 CMT8, P. Bến Thành, TP. Hồ Chí Minh</p>
+    <div class="hero-actions">
+      <a class="btn btn-gold" href="#contact">Liên hệ</a>
+      <a class="btn btn-outline" href="#services">Khám phá dịch vụ</a>
+      <a class="btn btn-outline" href="#gallery">Hình ảnh</a>
+    </div>
+  </div>
+  <a class="hero-scroll" href="#about">Khám phá <span aria-hidden="true">↓</span></a>
+</section>
+
+<!-- VỀ CHÚNG TÔI -->
+<section class="section section-cream" id="about">
+  <div class="container">
+    <p class="sec-label">Về chúng tôi</p>
+    <h2>Trải nghiệm <em>spa</em> đẳng cấp thực sự</h2>
+    <div class="about-grid">
+      <div class="about-text">
+        <p>KHẢI HOÀN Spa tọa lạc tại trung tâm Quận 1, sở hữu tầm nhìn tuyệt đẹp hướng ra công viên Tao Đàn - lá phổi xanh của thành phố. Đây là không gian lý tưởng để bạn thư giãn và tái tạo năng lượng.</p>
+        <p>Chúng tôi mang đến dịch vụ massage trị liệu chuyên nghiệp dành cho cả nam và nữ, tập trung vào sức khỏe thể chất và tinh thần. Đội ngũ kỹ thuật viên giàu kinh nghiệm, được đào tạo bài bản sẽ giúp bạn giải tỏa căng thẳng và phục hồi cơ thể hiệu quả.</p>
+        <div class="about-stats">
+          <div class="stat"><strong>12+</strong><span>Dịch vụ đa dạng</span></div>
+          <div class="stat"><strong>100%</strong><span>Khách hài lòng</span></div>
+        </div>
+      </div>
+      <figure class="about-img">
+        <img src="images/spa-about.jpg" alt="Đội ngũ KHẢI HOÀN Spa" loading="lazy">
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- DỊCH VỤ -->
+<section class="section section-cream" id="services">
+  <div class="container">
+    <p class="sec-label">Dịch vụ</p>
+    <h2>Trọn gói <em>thư giãn</em></h2>
+    <div class="services-grid">
+      <article class="service-card">
+        <h3>Xông hơi</h3>
+        <p>Xông hơi &amp; xông khô, giúp thải độc và thư giãn cơ thể</p>
+        <span class="badge">Phổ biến</span>
+      </article>
+      <article class="service-card">
+        <h3>Chà da</h3>
+        <p>Làm sạch sâu, loại bỏ tế bào chết, da mịn màng</p>
+        <span class="badge">Phổ biến</span>
+      </article>
+      <article class="service-card">
+        <h3>Jacuzzi</h3>
+        <p>Bể sục nóng &amp; lạnh, massage thủy lực toàn thân</p>
+        <span class="badge">Phổ biến</span>
+      </article>
+      <article class="service-card">
+        <h3>Ngâm chân đá nóng</h3>
+        <p>Bể ngâm đá nóng, thư giãn đôi chân mệt mỏi</p>
+        <span class="badge">Phổ biến</span>
+      </article>
+      <article class="service-card">
+        <h3>Massage Body</h3>
+        <p>60 phút hoặc 90 phút massage toàn thân chuyên nghiệp</p>
+        <span class="badge">Phổ biến</span>
+      </article>
+      <article class="service-card">
+        <h3>Massage Foot</h3>
+        <p>60 phút hoặc 90 phút massage chân, tay, bấm huyệt</p>
+        <span class="badge">Phổ biến</span>
+      </article>
+      <article class="service-card">
+        <h3>Gội đầu</h3>
+        <p>Gội đầu thư giãn với tinh dầu thiên nhiên</p>
+        <span class="badge">Phổ biến</span>
+      </article>
+      <article class="service-card">
+        <h3>Massage da mặt</h3>
+        <p>Chăm sóc da mặt cơ bản, làm sạch và thư giãn</p>
+        <span class="badge">Phổ biến</span>
+      </article>
+      <article class="service-card">
+        <h3>Nail care</h3>
+        <p>Cắt da, chăm sóc móng tay chân chuyên nghiệp</p>
+      </article>
+      <article class="service-card">
+        <h3>Lấy ráy tai</h3>
+        <p>Dịch vụ lấy ráy tai nhẹ nhàng, an toàn</p>
+      </article>
+      <article class="service-card">
+        <h3>Phòng GYM</h3>
+        <p>Phòng tập gym đầy đủ thiết bị hiện đại</p>
+      </article>
+      <article class="service-card">
+        <h3>Ăn nhẹ &amp; thức uống</h3>
+        <p>Phục vụ đồ ăn nhẹ và thức uống tại chỗ</p>
+      </article>
+    </div>
+    <p class="services-note">Thời gian dịch vụ linh hoạt theo nhu cầu</p>
+  </div>
+</section>
+
+<!-- KHÔNG GIAN -->
+<section class="section section-dark" id="khong-gian">
+  <div class="container">
+    <p class="sec-label sec-label-gold">Không gian</p>
+    <h2>Cơ sở vật chất <em>đẳng cấp</em></h2>
+    <div class="space-grid">
+      <div class="space-text">
+        <p>Được đầu tư kỹ lưỡng với trang thiết bị hiện đại, mang đến trải nghiệm spa tiêu chuẩn quốc tế.</p>
+        <h3>Không gian riêng tư linh hoạt</h3>
+        <p>Phòng massage riêng biệt, yên tĩnh với nội thất gỗ ấm áp và ánh sáng dịu nhẹ. Không gian có thể linh động sắp xếp, phù hợp cho trải nghiệm cá nhân riêng tư, cặp đôi hoặc nhóm nhỏ, vẫn đảm bảo sự thoải mái và kín đáo tuyệt đối.</p>
+        <h3>Tiện ích cao cấp</h3>
+        <p>Hệ thống tiện ích được đầu tư đồng bộ, bao gồm xông hơi ướt – khô, jacuzzi nóng – lạnh và khu thư giãn rộng rãi, hỗ trợ tối đa cho quá trình phục hồi cơ thể. Kết hợp cùng khu massage foot với dãy ghế cao cấp, bể ngâm chân đá nóng và không gian nghỉ ngơi yên tĩnh, Khải Hoàn Spa mang đến trải nghiệm thư giãn trọn vẹn trước và sau liệu trình massage trị liệu.</p>
+        <ul class="amenities">
+          <li><strong>Riêng tư</strong><span>Phòng VIP</span></li>
+          <li><strong>Miễn phí</strong><span>Wifi</span></li>
+          <li><strong>Thuận tiện</strong><span>Đỗ xe</span></li>
+        </ul>
+      </div>
+      <div class="space-imgs">
+        <img src="images/spa-sauna.jpg" alt="Phòng xông hơi KHẢI HOÀN Spa" loading="lazy">
+        <img src="images/spa-jacuzzi.jpg" alt="Bể sục Jacuzzi KHẢI HOÀN Spa" loading="lazy">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HÌNH ẢNH -->
+<section class="section section-cream" id="gallery">
+  <div class="container">
+    <p class="sec-label">Hình ảnh</p>
+    <h2>Khám phá <em>không gian</em></h2>
+    <p class="sec-intro">Hình ảnh thực tế về cơ sở vật chất, dịch vụ và không gian tại KHẢI HOÀN Spa - Trung tâm Quận 1</p>
+    <div class="gallery-grid">
+      <figure><img src="images/spa-gallery-sauna.jpg" alt="Khu xông hơi" loading="lazy"><figcaption>Xông hơi</figcaption></figure>
+      <figure><img src="images/spa-gallery-jacuzzi.jpg" alt="Bể sục Jacuzzi" loading="lazy"><figcaption>Jacuzzi</figcaption></figure>
+      <figure><img src="images/spa-gallery-ngam-chan.jpg" alt="Bể ngâm chân đá nóng" loading="lazy"><figcaption>Ngâm chân đá nóng</figcaption></figure>
+      <figure><img src="images/spa-gallery-body.jpg" alt="Massage Body" loading="lazy"><figcaption>Massage Body</figcaption></figure>
+      <figure><img src="images/spa-gallery-foot.jpg" alt="Massage Foot" loading="lazy"><figcaption>Massage Foot</figcaption></figure>
+      <figure><img src="images/spa-gallery-goi-dau.jpg" alt="Gội đầu" loading="lazy"><figcaption>Gội đầu</figcaption></figure>
+      <figure><img src="images/spa-gallery-face.jpg" alt="Massage da mặt" loading="lazy"><figcaption>Massage da mặt</figcaption></figure>
+      <figure><img src="images/spa-gallery-nail.jpg" alt="Nail care" loading="lazy"><figcaption>Nail care</figcaption></figure>
+      <figure><img src="images/spa-gallery-da-nong.jpg" alt="Massage đá nóng" loading="lazy"><figcaption>Massage đá nóng</figcaption></figure>
+      <figure><img src="images/spa-gallery-gym.jpg" alt="Phòng GYM" loading="lazy"><figcaption>Phòng GYM</figcaption></figure>
+      <figure><img src="images/spa-gallery-thu-gian.jpg" alt="Khu thư giãn" loading="lazy"><figcaption>Thư giãn</figcaption></figure>
+      <figure><img src="images/spa-gallery-massage.jpg" alt="Massage trị liệu" loading="lazy"><figcaption>Massage trị liệu</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- KIẾN THỨC SPA -->
+<section class="section section-cream" id="kien-thuc">
+  <div class="container">
+    <p class="sec-label">Kiến thức Spa</p>
+    <h2>Kinh nghiệm <em>thư giãn</em> tại Quận 1</h2>
+    <div class="articles-grid">
+      <article class="article-card">
+        <img src="images/spa-article-ben-thanh.jpg" alt="KHẢI HOÀN Spa gần Chợ Bến Thành và Công viên Tao Đàn" loading="lazy">
+        <div class="article-body">
+          <p class="article-read">7 phút đọc</p>
+          <h3>Spa gần Chợ Bến Thành và Công viên Tao Đàn: Cách chọn thuận tiện</h3>
+          <p>Một hướng dẫn local dành cho khách ở khu Bến Thành, tham quan trung tâm hoặc muốn tìm spa thuận tiện gần Công viên Tao Đàn.</p>
+        </div>
+      </article>
+      <article class="article-card">
+        <img src="images/spa-article-couple.jpg" alt="Massage cặp đôi tại phòng riêng ở Quận 1" loading="lazy">
+        <div class="article-body">
+          <p class="article-read">7 phút đọc</p>
+          <h3>Massage cặp đôi Quận 1: Kinh nghiệm đặt phòng riêng</h3>
+          <p>Checklist đặt lịch cho hai người để cùng bắt đầu đúng giờ, chọn thời lượng phù hợp và có không gian riêng tư như mong muốn.</p>
+        </div>
+      </article>
+      <article class="article-card">
+        <img src="images/spa-article-co-vai-gay.jpg" alt="Massage cổ vai gáy tại Quận 1" loading="lazy">
+        <div class="article-body">
+          <p class="article-read">7 phút đọc</p>
+          <h3>Massage cổ vai gáy Quận 1: Chọn lực và thời lượng thế nào?</h3>
+          <p>Một hướng dẫn thực tế dành cho người ngồi nhiều, thường căng vùng cổ vai hoặc muốn dành phần lớn buổi massage body cho thân trên.</p>
+        </div>
+      </article>
+    </div>
+    <p class="articles-more"><a class="btn btn-gold" href="https://khaihoanspa.com/vi/bai-viet/">Xem cẩm nang</a></p>
+  </div>
+</section>
+
+<!-- LIÊN HỆ -->
+<section class="section section-dark" id="contact">
+  <div class="container">
+    <p class="sec-label sec-label-gold">Liên hệ</p>
+    <h2>Đặt lịch hẹn <em>/ Ngay hôm nay</em></h2>
+    <div class="contact-grid">
+      <div class="contact-map">
+        <iframe title="Bản đồ KHẢI HOÀN Spa tại Quận 1" src="https://www.google.com/maps?q=16%20C%C3%A1ch%20M%E1%BA%A1ng%20Th%C3%A1ng%20T%C3%A1m%2C%20B%E1%BA%BFn%20Th%C3%A0nh%2C%20Qu%E1%BA%ADn%201%2C%20TP.%20H%E1%BB%93%20Ch%C3%AD%20Minh&output=embed" style="border:0" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+      <div class="contact-info">
+        <dl>
+          <div><dt>Địa chỉ</dt><dd>16 Cách Mạng Tháng Tám, phường Bến Thành<br>Quận 1, TP. Hồ Chí Minh</dd></div>
+          <div><dt>Hotline</dt><dd><a href="tel:+84705553479">070 555 3479</a></dd></div>
+          <div><dt>Giờ mở cửa</dt><dd>10:00 - 22:00 (Thứ 2 - Chủ nhật)</dd></div>
+        </dl>
+        <div class="contact-actions">
+          <a class="btn btn-gold" href="tel:+84705553479">Gọi ngay</a>
+          <a class="btn btn-outline-light" href="https://m.me/100054444551893" target="_blank" rel="noopener">Nhắn Messenger</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <p class="footer-brand">KHẢI HOÀN Spa</p>
+      <p>Massage khỏe trị liệu</p>
+    </div>
+    <div>
+      <p class="footer-head">Khám phá</p>
+      <p><a href="#gallery">Hình ảnh</a></p>
+      <p><a href="https://khaihoanspa.com/vi/bai-viet/">Bài viết spa</a></p>
+    </div>
+    <div>
+      <p class="footer-head">Liên hệ</p>
+      <p><a href="tel:+84705553479">070 555 3479</a></p>
+      <p><a href="https://www.facebook.com/profile.php?id=100054444551893" target="_blank" rel="noopener">Fanpage</a></p>
+      <p><a href="https://m.me/100054444551893" target="_blank" rel="noopener">Chat Messenger</a></p>
+    </div>
+    <div>
+      <p class="footer-head">Địa chỉ</p>
+      <p>16 Cách Mạng Tháng Tám, phường Bến Thành<br>Quận 1, TP. Hồ Chí Minh</p>
+    </div>
+  </div>
+  <p class="footer-copy">© 2026 KHẢI HOÀN Spa. Dịch vụ spa chuyên nghiệp dành cho cả nam và nữ</p>
+</footer>
+
+<a class="fab-call" href="tel:+84705553479" aria-label="Gọi ngay 070 555 3479">☎</a>
+
 </body>
 </html>
