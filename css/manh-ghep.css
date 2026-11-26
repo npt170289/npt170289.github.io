@@ -1,0 +1,38 @@
+/* Mảnh ghép — tile-assembly photo reveal (hiệu ứng Nguyễn đã chốt 2026-11-26).
+   Dùng kèm js/manh-ghep.js. Không có JS, không có IntersectionObserver, hoặc
+   prefers-reduced-motion → ảnh gốc <img> hiển thị bình thường, không đổi gì. */
+
+.mg-wrap { position: relative; overflow: hidden; }
+.hero .mg-wrap { position: absolute; inset: 0; }
+
+/* Ảnh gốc giữ nguyên khung (giữ layout, không nhảy hình) khi các mảnh dựng lên. */
+.mg-wrap > img.mg-src { visibility: hidden; }
+
+/* Giữ bo góc + bóng đổ của ảnh About / Không gian (vốn nằm trên <img>, giờ <img> đang ẩn). */
+.about-img .mg-wrap { border-radius: 14px; box-shadow: 0 18px 40px rgba(13, 43, 38, .18); }
+.space-imgs .mg-wrap { border-radius: 14px; }
+
+.mg-tiles {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  transition: transform .4s ease;
+}
+
+.mg-tile {
+  position: absolute;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transform: translate(var(--dx, 0px), var(--dy, 0px));
+  transition: opacity .45s ease-out, transform .55s cubic-bezier(.22, .61, .36, 1);
+  transition-delay: var(--d, 0ms);
+  will-change: opacity, transform;
+}
+
+.mg-tiles.mg-play .mg-tile { opacity: 1; transform: translate(0, 0); }
+
+/* Giữ hiệu ứng hover phóng to của gallery (ảnh gốc đang ẩn nên chuyển sang khối mảnh). */
+.gallery-grid figure:hover .mg-tiles { transform: scale(1.04); }
+
+@media (prefers-reduced-motion: reduce) {
+  .mg-tile { transition: none; opacity: 1; transform: none; }
+}
